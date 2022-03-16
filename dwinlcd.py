@@ -143,9 +143,8 @@ class DWIN_LCD:
 	ENCODER_DIFF_CCW = 2  # counterclockwise rotation
 	ENCODER_DIFF_ENTER = 3   # click
 	ENCODER_WAIT = 80
-	ENCODER_WAIT_ENTER = 300
+	ENCODER_WAIT_ENTER = 200 #sur (300)
 	EncoderRateLimit = True
-
 
 	dwin_zoffset = 0.0
 	last_zoffset = 0.0
@@ -282,20 +281,20 @@ class DWIN_LCD:
 	TUNE_CASE_SPEED = 1
 	TUNE_CASE_TEMP = (TUNE_CASE_SPEED + 1)
 	TUNE_CASE_BED = (TUNE_CASE_TEMP + 1)
-	TUNE_CASE_FAN = (TUNE_CASE_BED + 0)
+	TUNE_CASE_FAN = (TUNE_CASE_BED + 1)	#sur+1 fan
 	TUNE_CASE_ZOFF = (TUNE_CASE_FAN + 1)
 	TUNE_CASE_TOTAL = TUNE_CASE_ZOFF
 
 	TEMP_CASE_TEMP = (0 + 1)
 	TEMP_CASE_BED = (TEMP_CASE_TEMP + 1)
-	TEMP_CASE_FAN = (TEMP_CASE_BED + 0)
+	TEMP_CASE_FAN = (TEMP_CASE_BED + 1)	#sur+1 fan menu
 	TEMP_CASE_PLA = (TEMP_CASE_FAN + 1)
 	TEMP_CASE_ABS = (TEMP_CASE_PLA + 1)
 	TEMP_CASE_TOTAL = TEMP_CASE_ABS
 
 	PREHEAT_CASE_TEMP = (0 + 1)
 	PREHEAT_CASE_BED = (PREHEAT_CASE_TEMP + 1)
-	PREHEAT_CASE_FAN = (PREHEAT_CASE_BED + 0)
+	PREHEAT_CASE_FAN = (PREHEAT_CASE_BED + 1)	#sur+1 fan
 	PREHEAT_CASE_SAVE = (PREHEAT_CASE_FAN + 1)
 	PREHEAT_CASE_TOTAL = PREHEAT_CASE_SAVE
 
@@ -315,10 +314,12 @@ class DWIN_LCD:
 		self.next_rts_update_ms = 0
 		self.last_cardpercentValue = 101
 		self.lcd = T5UIC1_LCD(USARTx)
+		self.lcd.Backlight_SetLuminance(0x14) #Sur 20
 		self.checkkey = self.MainMenu
 		self.pd = PrinterData(octoPrint_API_Key)
-		self.timer = multitimer.MultiTimer(interval=2, function=self.EachMomentUpdate)
+		self.timer = multitimer.MultiTimer(interval=1, function=self.EachMomentUpdate) #sur interval 1(2)
 		self.HMI_ShowBoot()
+		#self.HMI_AudioFeedback(True) #Sur?
 		print("Boot looks good")
 		print("Testing Web-services")
 		self.pd.init_Webservices()
@@ -373,6 +374,11 @@ class DWIN_LCD:
 			self.Goto_PrintProcess()
 		elif self.pd.status in ['operational', 'complete', 'standby', 'cancelled']:
 			self.Goto_MainMenu()
+
+			#self.checkkey = self.TemperatureID	#test other pages outdoor /sur
+			#self.Draw_Temperature_Menu()
+			#self.Goto_PrintProcess()
+
 		else:
 			self.Goto_MainMenu()
 		self.Draw_Status_Area(with_update)
@@ -1527,66 +1533,133 @@ class DWIN_LCD:
 
 	def Draw_Status_Area(self, with_update):
 		#  Clear the bottom area of the screen
-		self.lcd.Draw_Rectangle(1, self.lcd.Color_Bg_Black, 0, self.STATUS_Y, self.lcd.DWIN_WIDTH, self.lcd.DWIN_HEIGHT - 1)
+		#self.lcd.Draw_Rectangle(1, self.lcd.Color_Bg_Black, 0, self.STATUS_Y, self.lcd.DWIN_WIDTH, self.lcd.DWIN_HEIGHT - 1)
 		#
 		#  Status Area
 		#
+
+		############# 1-st line Sur
+
+		#temp_hotend
 		if self.pd.HAS_HOTEND:
-			self.lcd.ICON_Show(self.ICON, self.ICON_HotendTemp, 13, 381)
+			self.lcd.ICON_Show(self.ICON, self.ICON_HotendTemp, 8, 382)
 			self.lcd.Draw_IntValue(
 				True, True, 0, self.lcd.DWIN_FONT_STAT,
 				self.lcd.Color_White, self.lcd.Color_Bg_Black,
-				3, 33, 382,
+				3, 8 + 2 * self.STAT_CHR_W, 382,
 				self.pd.thermalManager['temp_hotend'][0]['celsius']
 			)
 			self.lcd.Draw_String(
 				False, False, self.lcd.DWIN_FONT_STAT,
 				self.lcd.Color_White, self.lcd.Color_Bg_Black,
-				33 + 3 * self.STAT_CHR_W + 5, 383,
+				26 + 3 * self.STAT_CHR_W + 5, 382,
 				"/"
 			)
 			self.lcd.Draw_IntValue(
 				True, True, 0, self.lcd.DWIN_FONT_STAT,
-				self.lcd.Color_White, self.lcd.Color_Bg_Black, 3, 33 + 4 * self.STAT_CHR_W + 6, 382,
+				self.lcd.Color_White, self.lcd.Color_Bg_Black, 3, 26 + 4 * self.STAT_CHR_W + 6, 382,
 				self.pd.thermalManager['temp_hotend'][0]['target']
 			)
-
 		if self.pd.HOTENDS > 1:
-			self.lcd.ICON_Show(self.ICON, self.ICON_HotendTemp, 13, 381)
+			self.lcd.ICON_Show(self.ICON, self.ICON_HotendTemp, 8, 381)
 
-		if self.pd.HAS_HEATED_BED:
-			self.lcd.ICON_Show(self.ICON, self.ICON_BedTemp, 158, 381)
-			self.lcd.Draw_IntValue(
-				True, True, 0, self.lcd.DWIN_FONT_STAT, self.lcd.Color_White,
-				self.lcd.Color_Bg_Black, 3, 178, 382,
-				self.pd.thermalManager['temp_bed']['celsius']
-			)
-			self.lcd.Draw_String(
-				False, False, self.lcd.DWIN_FONT_STAT, self.lcd.Color_White,
-				self.lcd.Color_Bg_Black, 178 + 3 * self.STAT_CHR_W + 5, 383,
-				"/"
-			)
-			self.lcd.Draw_IntValue(
-				True, True, 0, self.lcd.DWIN_FONT_STAT,
-				self.lcd.Color_White, self.lcd.Color_Bg_Black, 3, 178 + 4 * self.STAT_CHR_W + 6, 382,
-				self.pd.thermalManager['temp_bed']['target']
-			)
+		#feedrate %
 
-		self.lcd.ICON_Show(self.ICON, self.ICON_Speed, 13, 429)
+		self.lcd.ICON_Show(self.ICON, self.ICON_Speed, 116, 382)
 		self.lcd.Draw_IntValue(
 			True, True, 0, self.lcd.DWIN_FONT_STAT,
-			self.lcd.Color_White, self.lcd.Color_Bg_Black, 3, 33 + 2 * self.STAT_CHR_W, 429,
+			self.lcd.Color_White, self.lcd.Color_Bg_Black, 3, 116 + 2 * self.STAT_CHR_W, 382,
 			self.pd.feedrate_percentage
 		)
 		self.lcd.Draw_String(
 			False, False, self.lcd.DWIN_FONT_STAT,
-			self.lcd.Color_White, self.lcd.Color_Bg_Black, 33 + 5 * self.STAT_CHR_W + 2, 429,
+			self.lcd.Color_White, self.lcd.Color_Bg_Black, 116 + 5 * self.STAT_CHR_W + 2, 382,
 			"%"
 		)
 
+		#fan speed %
+		self.lcd.ICON_Show(self.ICON, self.ICON_FanSpeed, 190, 382)
+		self.lcd.Draw_IntValue(
+			True, True, 0, self.lcd.DWIN_FONT_STAT,
+			self.lcd.Color_White, self.lcd.Color_Bg_Black, 3, 200 + 2 * self.STAT_CHR_W, 382,
+			self.pd.thermalManager['fan_speed'][0]
+		)
+		self.lcd.Draw_String(
+			False, False, self.lcd.DWIN_FONT_STAT,
+			self.lcd.Color_White, self.lcd.Color_Bg_Black, 200 + 5 * self.STAT_CHR_W + 2, 382,
+			"%"
+		)
+
+		############# 2-nd line
+
+		#temp_bed
+		if self.pd.HAS_HEATED_BED:
+			self.lcd.ICON_Show(self.ICON, self.ICON_BedTemp, 8, 410)
+			self.lcd.Draw_IntValue(
+				True, True, 0, self.lcd.DWIN_FONT_STAT, self.lcd.Color_White,
+				self.lcd.Color_Bg_Black, 3, 8 + 2 * self.STAT_CHR_W, 410,
+				self.pd.thermalManager['temp_bed']['celsius']
+			)
+			self.lcd.Draw_String(
+				False, False, self.lcd.DWIN_FONT_STAT, self.lcd.Color_White,
+				self.lcd.Color_Bg_Black, 26 + 3 * self.STAT_CHR_W + 5, 410,
+				"/"
+			)
+			self.lcd.Draw_IntValue(
+				True, True, 0, self.lcd.DWIN_FONT_STAT,
+				self.lcd.Color_White, self.lcd.Color_Bg_Black, 3, 26 + 4 * self.STAT_CHR_W + 6, 410,
+				self.pd.thermalManager['temp_bed']['target']
+			)
+
+		#flowrate %
+		self.lcd.ICON_Show(self.ICON, self.ICON_Extruder, 116, 410)
+		self.lcd.Draw_IntValue(
+			True, True, 0, self.lcd.DWIN_FONT_STAT,
+			self.lcd.Color_White, self.lcd.Color_Bg_Black, 3, 116 + 2 * self.STAT_CHR_W, 410,
+			self.pd.flowrate_percentage
+		)
+		self.lcd.Draw_String(
+			False, False, self.lcd.DWIN_FONT_STAT,
+			self.lcd.Color_White, self.lcd.Color_Bg_Black, 116 + 5 * self.STAT_CHR_W + 2, 410,
+			"%"
+		)
+
+		#z-offset
 		if self.pd.HAS_ZOFFSET_ITEM:
-			self.lcd.ICON_Show(self.ICON, self.ICON_Zoffset, 158, 428)
-			self.lcd.Draw_Signed_Float(self.lcd.DWIN_FONT_STAT, self.lcd.Color_Bg_Black, 2, 2, 178, 429, self.pd.BABY_Z_VAR * 100)
+			self.lcd.ICON_Show(self.ICON, self.ICON_Zoffset, 190, 410)
+			self.lcd.Draw_Signed_Float(
+				self.lcd.DWIN_FONT_STAT,
+				self.lcd.Color_Bg_Black, 2, 2, 210, 410, 
+				self.pd.BABY_Z_VAR * 100
+			)
+
+		################ 3-d line
+
+		self.lcd.Draw_Line(self.lcd.Color_Yellow, 0, 440, 271, 440)
+
+		#current X
+		self.lcd.ICON_Show(self.ICON, self.ICON_MaxSpeedX, 8, 446)
+		self.lcd.Draw_Signed_Float(
+			self.lcd.DWIN_FONT_STAT, 
+			self.lcd.Color_Bg_Black, 3, 1, 8 + 2 * self.STAT_CHR_W, 446,
+			self.pd.current_position.x * 10
+		)
+		
+		#current Y
+		self.lcd.ICON_Show(self.ICON, self.ICON_MaxSpeedY, 96, 446)
+		self.lcd.Draw_Signed_Float(
+			self.lcd.DWIN_FONT_STAT, 
+			self.lcd.Color_Bg_Black, 3, 1, 96 + 2 * self.STAT_CHR_W, 446,
+			self.pd.current_position.y * 10
+		)
+
+		#current Z
+		self.lcd.ICON_Show(self.ICON, self.ICON_MaxSpeedZ, 180, 446)
+		self.lcd.Draw_Signed_Float(
+			self.lcd.DWIN_FONT_STAT, 
+			self.lcd.Color_Bg_Black, 3, 2, 180 + 2 * self.STAT_CHR_W, 446,
+			self.pd.current_position.z * 100
+		)
 
 		# if with_update:
 		# 	self.lcd.UpdateLCD()
@@ -1778,9 +1851,9 @@ class DWIN_LCD:
 			self.lcd.Frame_AreaCopy(1, 240, 104, 264, 114, self.LBLX, self.MBASE(self.TUNE_CASE_BED))  # Bed...
 			self.lcd.Frame_AreaCopy(1, 1, 89, 83, 101, self.LBLX + 27, self.MBASE(self.TUNE_CASE_BED))  # ...Temperature
 		if self.pd.HAS_FAN:
-		 	self.lcd.Frame_AreaCopy(1, 0, 119, 64, 132, self.LBLX, self.MBASE(self.TUNE_CASE_FAN))  # Fan speed
+			self.lcd.Frame_AreaCopy(1, 0, 119, 64, 132, self.LBLX, self.MBASE(self.TUNE_CASE_FAN))  # Fan speed
 		if self.pd.HAS_ZOFFSET_ITEM:
-		 	self.lcd.Frame_AreaCopy(1, 93, 179, 141, 189, self.LBLX, self.MBASE(self.TUNE_CASE_ZOFF))  # Z-offset
+			self.lcd.Frame_AreaCopy(1, 93, 179, 141, 189, self.LBLX, self.MBASE(self.TUNE_CASE_ZOFF))  # Z-offset
 		self.Draw_Back_First(self.select_tune.now == 0)
 		if (self.select_tune.now):
 			self.Draw_Menu_Cursor(self.select_tune.now)
@@ -1805,15 +1878,15 @@ class DWIN_LCD:
 				3, 216, self.MBASE(self.TUNE_CASE_BED), self.pd.thermalManager['temp_bed']['target'])
 
 		if self.pd.HAS_FAN:
-		 	self.Draw_Menu_Line(self.TUNE_CASE_FAN, self.ICON_FanSpeed)
-		 	self.lcd.Draw_IntValue(
+			self.Draw_Menu_Line(self.TUNE_CASE_FAN, self.ICON_FanSpeed)
+			self.lcd.Draw_IntValue(
 		 		True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
 		 		3, 216, self.MBASE(self.TUNE_CASE_FAN),
 		 		self.pd.thermalManager['fan_speed'][0]
 		 	)
 		if self.pd.HAS_ZOFFSET_ITEM:
-		 	self.Draw_Menu_Line(self.TUNE_CASE_ZOFF, self.ICON_Zoffset)
-		 	self.lcd.Draw_Signed_Float(
+			self.Draw_Menu_Line(self.TUNE_CASE_ZOFF, self.ICON_Zoffset)
+			self.lcd.Draw_Signed_Float(
 		 		self.lcd.font8x16, self.lcd.Color_Bg_Black, 2, 2, 202, self.MBASE(self.TUNE_CASE_ZOFF), self.pd.BABY_Z_VAR * 100
 		 	)
 
@@ -2297,8 +2370,8 @@ class DWIN_LCD:
 			self.HMI_Zoffset()
 		elif self.checkkey == self.BedTemp:
 			self.HMI_BedTemp()
-		# elif self.checkkey == self.FanSpeed:
-		# 	self.HMI_FanSpeed()
+		elif self.checkkey == self.FanSpeed:	#sur on
+			self.HMI_FanSpeed()
 		elif self.checkkey == self.PrintSpeed:
 			self.HMI_PrintSpeed()
 		elif self.checkkey == self.MaxSpeed_value:

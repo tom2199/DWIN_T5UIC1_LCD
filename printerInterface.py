@@ -158,7 +158,7 @@ class KlippySocket:
 			return
 		try:
 			m = json.loads(line)
-		except JSONDecodeError:
+		except json.JSONDecodeError:
 			print("ERROR: Unable to parse line\n")
 			return
 		cm = json.dumps(m, separators=(',', ':'))
@@ -191,14 +191,14 @@ class PrinterData:
 	HAS_HOTEND = True
 	HOTENDS = 1
 	HAS_HEATED_BED = True
-	HAS_FAN = False
+	HAS_FAN = True
 	HAS_ZOFFSET_ITEM = True
 	HAS_ONESTEP_LEVELING = False
 	HAS_PREHEAT = True
 	HAS_BED_PROBE = False
 	PREVENT_COLD_EXTRUSION = True
-	EXTRUDE_MINTEMP = 170
-	EXTRUDE_MAXLENGTH = 200
+	EXTRUDE_MINTEMP = 180
+	EXTRUDE_MAXLENGTH = 100
 
 	HEATER_0_MAXTEMP = 275
 	HEATER_0_MINTEMP = 5
@@ -224,8 +224,13 @@ class PrinterData:
 
 	buzzer = buzz_t()
 
+	xpos = 0
+	ypos = 0
+	zpos = 0
+
 	BABY_Z_VAR = 0
 	feedrate_percentage = 100
+	flowrate_percentage = 100
 	temphot = 0
 	tempbed = 0
 
@@ -241,11 +246,11 @@ class PrinterData:
 	}
 
 	material_preset = [
-		material_preset_t('PLA', 200, 60),
-		material_preset_t('ABS', 210, 100)
+		material_preset_t('PLA', 180, 0),
+		material_preset_t('ABS', 0, 70)
 	]
 	files = None
-	MACHINE_SIZE = "220x220x250"
+	MACHINE_SIZE = "235x235x240"
 	SHORT_BUILD_VERSION = "1.00"
 	CORP_WEBSITE_E = "https://www.klipper3d.org/"
 
@@ -310,7 +315,7 @@ class PrinterData:
 							if status['configfile']['config']['bltouch']['z_offset']:
 								self.BABY_Z_VAR = float(status['configfile']['config']['bltouch']['z_offset'])
 
-			# print(status)
+			#print(status)
 
 	def ishomed(self):
 		if self.current_position.home_x and self.current_position.home_y and self.current_position.home_z:
@@ -341,7 +346,7 @@ class PrinterData:
 		d = r.content.decode('utf-8')
 		try:
 			return json.loads(d)
-		except JSONDecodeError:
+		except json.JSONDecodeError:
 			print('Decoding JSON has failed')
 		return None
 
@@ -394,12 +399,14 @@ class PrinterData:
 		flow_rate = gcm['extrude_factor'] * 100 #flow rate percent
 		self.absolute_moves = gcm['absolute_coordinates'] #absolute or relative
 		self.absolute_extrude = gcm['absolute_extrude'] #absolute or relative
-		speed = gcm['speed'] #current speed in mm/s
+		#speed = gcm['speed'] #current speed in mm/s
 		print_speed = gcm['speed_factor'] * 100 #print speed percent
 		bed = data['heater_bed'] #temperature, target
 		extruder = data['extruder'] #temperature, target
 		fan = data['fan']
-		Update = False
+
+		Update = False #Sur xyz
+
 		try:
 			if self.thermalManager['temp_bed']['celsius'] != int(bed['temperature']):
 				self.thermalManager['temp_bed']['celsius'] = int(bed['temperature'])
@@ -420,6 +427,16 @@ class PrinterData:
 				self.BABY_Z_VAR = z_offset
 				self.HMI_ValueStruct.offset_value = z_offset * 100
 				Update = True
+			if self.xpos != self.current_position.x:
+				Update = True
+			if self.ypos != self.current_position.y:
+				Update = True
+			if self.zpos != self.current_position.z:
+				Update = True
+			if self.flowrate_percentage != flow_rate:
+				Update = True
+			if self.feedrate_percentage != print_speed:
+				Update = True							
 		except:
 			pass #missing key, shouldn't happen, fixes misses on conditionals ¯\_(ツ)_/¯
 		self.job_Info = self.getREST('/printer/objects/query?virtual_sdcard&print_stats')['result']['status']
@@ -427,6 +444,14 @@ class PrinterData:
 			self.file_name = self.job_Info['print_stats']['filename']
 			self.status = self.job_Info['print_stats']['state']
 			self.HMI_flag.print_finish = self.getPercent() == 100.0
+		
+		self.xpos = self.current_position.x
+		self.ypos = self.current_position.y
+		self.zpos = self.current_position.z
+
+		self.flowrate_percentage = flow_rate
+		self.feedrate_percentage = print_speed
+
 		return Update
 
 	def printingIsPaused(self):
@@ -470,6 +495,10 @@ class PrinterData:
 	def set_feedrate(self, fr):
 		self.feedrate_percentage = fr
 		self.sendGCode('M220 S%s' % fr)
+
+	def set_flowrate(self, fr):
+		self.flowrate_percentage = fr
+		self.sendGCode('M221 S%s' % fr)
 
 	def home(self, homeZ=False): #fixed using gcode
 		script = 'G28 X Y'
