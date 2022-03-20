@@ -136,6 +136,8 @@ class DWIN_LCD:
 	Print_window = 33
 	Popup_Window = 34
 
+	FlowSpeed = 35
+
 	MINUNITMULT = 10
 
 	ENCODER_DIFF_NO = 0  # no state
@@ -143,7 +145,7 @@ class DWIN_LCD:
 	ENCODER_DIFF_CCW = 2  # counterclockwise rotation
 	ENCODER_DIFF_ENTER = 3   # click
 	ENCODER_WAIT = 80
-	ENCODER_WAIT_ENTER = 200 #sur (300)
+	ENCODER_WAIT_ENTER = 400 #sur (300)
 	EncoderRateLimit = True
 
 	dwin_zoffset = 0.0
@@ -793,13 +795,23 @@ class DWIN_LCD:
 					self.pd.feedrate_percentage
 				)
 				self.EncoderRateLimit = False
+			#elif nozzle temp?
+			#elif bed temp?
+			elif self.select_tune.now == self.TUNE_CASE_FAN:
+				self.checkkey = self.FanSpeed
+				self.lcd.Draw_IntValue(
+					True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Select_Color,
+					3, 216, self.MBASE(self.TUNE_CASE_FAN + self.MROWS - self.index_tune),
+					self.pd.fanspeed_percentage
+				)
+				self.EncoderRateLimit = False				
 			elif self.select_tune.now == self.TUNE_CASE_ZOFF:   #z offset
 				self.checkkey = self.Homeoffset
 				self.lcd.Draw_Signed_Float(
 					self.lcd.font8x16, self.lcd.Select_Color, 2, 2, 202,
 					self.MBASE(self.TUNE_CASE_ZOFF + self.MROWS - self.index_tune),
 					self.pd.HMI_ValueStruct.offset_value
-				)
+				)			
 
 		self.lcd.UpdateLCD()
 
@@ -810,10 +822,8 @@ class DWIN_LCD:
 
 		if (encoder_diffState == self.ENCODER_DIFF_CW):
 			self.pd.HMI_ValueStruct.print_speed += 1
-
 		elif (encoder_diffState == self.ENCODER_DIFF_CCW):
 			self.pd.HMI_ValueStruct.print_speed -= 1
-
 		elif (encoder_diffState == self.ENCODER_DIFF_ENTER):
 			self.checkkey = self.Tune
 			self.encoderRate = True
@@ -823,6 +833,51 @@ class DWIN_LCD:
 			True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
 			3, 216, self.MBASE(self.select_tune.now + self.MROWS - self.index_tune),
 			self.pd.HMI_ValueStruct.print_speed
+		)
+
+	def HMI_FanSpeed(self):	#sur
+		encoder_diffState = self.get_encoder_state()
+		if (encoder_diffState == self.ENCODER_DIFF_NO):
+			return
+
+		if self.pd.HMI_ValueStruct.show_mode == -1: #Temperature
+			fan_line = self.TEMP_CASE_FAN
+		else:
+			fan_line = self.TUNE_CASE_FAN + self.MROWS - self.index_tune
+
+		if (encoder_diffState == self.ENCODER_DIFF_ENTER):
+			#self.encoderRate = True
+			self.EncoderRateLimit = True
+
+			if self.pd.HMI_ValueStruct.show_mode == -1: #Temperature
+				self.checkkey = self.TemperatureID #return to menu...
+			else:
+				self.checkkey = self.Tune
+
+			self.lcd.Draw_IntValue(
+				True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
+				3, 216, self.MBASE(fan_line),
+				self.pd.HMI_ValueStruct.Fan_speed
+			)
+			self.pd.set_fanspeed(self.pd.HMI_ValueStruct.Fan_speed)
+			return
+
+		elif (encoder_diffState == self.ENCODER_DIFF_CW):
+			self.pd.HMI_ValueStruct.Fan_speed += 1
+
+		elif (encoder_diffState == self.ENCODER_DIFF_CCW):
+			self.pd.HMI_ValueStruct.Fan_speed -= 1
+
+
+		if self.pd.HMI_ValueStruct.Fan_speed < 0:
+			self.pd.HMI_ValueStruct.Fan_speed = 0
+		if self.pd.HMI_ValueStruct.Fan_speed > 100:
+			self.pd.HMI_ValueStruct.Fan_speed = 100
+
+		self.lcd.Draw_IntValue(
+			True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Select_Color,
+			3, 216, self.MBASE(fan_line),
+			self.pd.HMI_ValueStruct.Fan_speed
 		)
 
 	def HMI_AxisMove(self):
@@ -1330,7 +1385,8 @@ class DWIN_LCD:
 					3, 216, self.MBASE(temp_line),
 					self.pd.HMI_ValueStruct.E_Temp
 				)
-				self.pd.setTargetHotend(self.pd.HMI_ValueStruct.E_Temp, 0)
+
+			self.pd.setExtTemp(self.pd.HMI_ValueStruct.E_Temp, 0)
 			return
 
 		elif (encoder_diffState == self.ENCODER_DIFF_CW):
@@ -1350,6 +1406,7 @@ class DWIN_LCD:
 			3, 216, self.MBASE(temp_line),
 			self.pd.HMI_ValueStruct.E_Temp
 		)
+
 
 	def HMI_BedTemp(self):
 		encoder_diffState = self.get_encoder_state()
@@ -1399,7 +1456,8 @@ class DWIN_LCD:
 					3, 216, self.MBASE(bed_line),
 					self.pd.HMI_ValueStruct.Bed_Temp
 				)
-				self.pd.setTargetHotend(self.pd.HMI_ValueStruct.Bed_Temp, 0)
+
+			self.pd.setBedTemp(self.pd.HMI_ValueStruct.Bed_Temp)
 			return
 
 		elif (encoder_diffState == self.ENCODER_DIFF_CW):
@@ -1635,10 +1693,10 @@ class DWIN_LCD:
 
 		################ 3-d line
 
-		self.lcd.Draw_Line(self.lcd.Color_Yellow, 0, 440, 271, 440)
+		self.lcd.Draw_Line(self.lcd.Color_Yellow, 1, 440, 270, 440)
 
 		#current X
-		self.lcd.ICON_Show(self.ICON, self.ICON_MaxSpeedX, 8, 446)
+		self.lcd.ICON_Show(self.ICON, self.ICON_MaxSpeedX, 6, 446)
 		self.lcd.Draw_Signed_Float(
 			self.lcd.DWIN_FONT_STAT, 
 			self.lcd.Color_Bg_Black, 3, 1, 8 + 2 * self.STAT_CHR_W, 446,
@@ -1646,7 +1704,7 @@ class DWIN_LCD:
 		)
 		
 		#current Y
-		self.lcd.ICON_Show(self.ICON, self.ICON_MaxSpeedY, 96, 446)
+		self.lcd.ICON_Show(self.ICON, self.ICON_MaxSpeedY, 94, 446)
 		self.lcd.Draw_Signed_Float(
 			self.lcd.DWIN_FONT_STAT, 
 			self.lcd.Color_Bg_Black, 3, 1, 96 + 2 * self.STAT_CHR_W, 446,
@@ -1654,7 +1712,7 @@ class DWIN_LCD:
 		)
 
 		#current Z
-		self.lcd.ICON_Show(self.ICON, self.ICON_MaxSpeedZ, 180, 446)
+		self.lcd.ICON_Show(self.ICON, self.ICON_MaxSpeedZ, 178, 446)
 		self.lcd.Draw_Signed_Float(
 			self.lcd.DWIN_FONT_STAT, 
 			self.lcd.Color_Bg_Black, 3, 2, 180 + 2 * self.STAT_CHR_W, 446,

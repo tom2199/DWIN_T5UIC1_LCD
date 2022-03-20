@@ -132,7 +132,7 @@ class KlippySocket:
 					))
 				exit(-1)
 			break
-		print("Connection.\n")
+		print("Connected.\n")
 
 	def process_socket(self):
 		data = self.webhook_socket.recv(4096).decode()
@@ -195,21 +195,21 @@ class PrinterData:
 	HAS_ZOFFSET_ITEM = True
 	HAS_ONESTEP_LEVELING = False
 	HAS_PREHEAT = True
-	HAS_BED_PROBE = False
+	HAS_BED_PROBE = True
 	PREVENT_COLD_EXTRUSION = True
 	EXTRUDE_MINTEMP = 180
 	EXTRUDE_MAXLENGTH = 100
 
 	HEATER_0_MAXTEMP = 275
-	HEATER_0_MINTEMP = 5
+	HEATER_0_MINTEMP = 0
 	HOTEND_OVERSHOOT = 15
 
 	MAX_E_TEMP = (HEATER_0_MAXTEMP - (HOTEND_OVERSHOOT))
 	MIN_E_TEMP = HEATER_0_MINTEMP
 
 	BED_OVERSHOOT = 10
-	BED_MAXTEMP = 150
-	BED_MINTEMP = 5
+	BED_MAXTEMP = 120
+	BED_MINTEMP = 0
 
 	BED_MAX_TARGET = (BED_MAXTEMP - (BED_OVERSHOOT))
 	MIN_BED_TEMP = BED_MINTEMP
@@ -231,6 +231,7 @@ class PrinterData:
 	BABY_Z_VAR = 0
 	feedrate_percentage = 100
 	flowrate_percentage = 100
+	fanspeed_percentage = 0
 	temphot = 0
 	tempbed = 0
 
@@ -495,6 +496,13 @@ class PrinterData:
 	def set_feedrate(self, fr):
 		self.feedrate_percentage = fr
 		self.sendGCode('M220 S%s' % fr)
+
+	def set_fanspeed(self, fr):
+		self.fanspeed_percentage = fr
+		f = 255 * fr / 100
+		if f < 0 : f = 0
+		if f > 255 : f = 255
+		self.sendGCode('M106 S%s' % f)
 
 	def set_flowrate(self, fr):
 		self.flowrate_percentage = fr
