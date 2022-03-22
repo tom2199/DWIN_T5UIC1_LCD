@@ -193,7 +193,7 @@ class PrinterData:
 	HAS_HEATED_BED = True
 	HAS_FAN = True
 	HAS_ZOFFSET_ITEM = True
-	HAS_ONESTEP_LEVELING = False
+	HAS_ONESTEP_LEVELING = True
 	HAS_PREHEAT = True
 	HAS_BED_PROBE = True
 	PREVENT_COLD_EXTRUSION = True
@@ -492,6 +492,18 @@ class PrinterData:
 	def resume_job(self): #fixed
 		print('Resuming job:')
 		self.postREST('printer/print/resume', json=None)
+
+	def klipper_restart(self): #sur POST /printer/restart
+		self.postREST('printer/restart', json=None)
+
+	def mcu_fw_restart(self): #sur POST /printer/firmware_restart
+		self.postREST('/printer/firmware_restart', json=None)
+
+	def host_shutdown(self): #sur POST /machine/shutdown
+		self.postREST('/machine/shutdown', json=None)
+
+	def host_restart(self): #sur POST /machine/reboot
+		self.postREST('/machine/reboot', json=None)
 
 	def set_feedrate(self, fr):
 		self.feedrate_percentage = fr

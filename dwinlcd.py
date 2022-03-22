@@ -137,6 +137,7 @@ class DWIN_LCD:
 	Popup_Window = 34
 
 	FlowSpeed = 35
+	PrinterHostMcu = 36
 
 	MINUNITMULT = 10
 
@@ -624,7 +625,7 @@ class DWIN_LCD:
 					self.Draw_More_Icon(self.CONTROL_CASE_MOVE + self.MROWS - self.index_control)  # Motion >
 					if (self.index_control > self.MROWS):
 						self.Draw_More_Icon(self.CONTROL_CASE_INFO + self.MROWS - self.index_control)  # Info >
-						self.lcd.Frame_AreaCopy(1, 0, 104, 24, 114, self.LBLX, self.MBASE(self.CONTROL_CASE_INFO - 1))
+						self.lcd.Frame_AreaCopy(1, 0, 104, 24, 114, self.LBLX, self.MBASE(self.CONTROL_CASE_INFO - 1)) #sur todo host
 				else:
 					self.Move_Highlight(1, self.select_control.now + self.MROWS - self.index_control)
 		elif (encoder_diffState == self.ENCODER_DIFF_CCW):
@@ -1154,9 +1155,9 @@ class DWIN_LCD:
 					self.lcd.Frame_AreaCopy(1, 157, 76, 181, 86, self.LBLX, self.MBASE(self.PREHEAT_CASE_BED) + 3)
 					self.lcd.Frame_AreaCopy(1, 240, 104, 264, 114, self.LBLX + 27, self.MBASE(self.PREHEAT_CASE_BED) + 3)
 					self.lcd.Frame_AreaCopy(1, 1, 89, 83, 101, self.LBLX + 54, self.MBASE(self.PREHEAT_CASE_BED) + 3)  # PLA bed temp
-				if self.pd.HAS_FAN:
-					self.lcd.Frame_AreaCopy(1, 157, 76, 181, 86, self.LBLX, self.MBASE(self.PREHEAT_CASE_FAN))
-					self.lcd.Frame_AreaCopy(1, 0, 119, 64, 132, self.LBLX + 27, self.MBASE(self.PREHEAT_CASE_FAN))  # PLA fan speed
+				#if self.pd.HAS_FAN:
+				#	self.lcd.Frame_AreaCopy(1, 157, 76, 181, 86, self.LBLX, self.MBASE(self.PREHEAT_CASE_FAN))
+				#	self.lcd.Frame_AreaCopy(1, 0, 119, 64, 132, self.LBLX + 27, self.MBASE(self.PREHEAT_CASE_FAN))  # PLA fan speed
 
 				self.lcd.Frame_AreaCopy(1, 97, 165, 229, 177, self.LBLX, self.MBASE(self.PREHEAT_CASE_SAVE))  # Save PLA configuration
 
@@ -1176,14 +1177,15 @@ class DWIN_LCD:
 						3, 216, self.MBASE(i),
 						self.pd.material_preset[0].bed_temp
 					)
-				if self.pd.HAS_FAN:
-					i += 1
-					self.Draw_Menu_Line(i, self.ICON_FanSpeed)
-					self.lcd.Draw_IntValue(
-						True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
-						3, 216, self.MBASE(i),
-						self.pd.material_preset[0].fan_speed
-					)
+				#if self.pd.HAS_FAN:
+				#	i += 1
+				#	self.Draw_Menu_Line(i, self.ICON_FanSpeed)
+				#	self.lcd.Draw_IntValue(
+				#		True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
+				#		3, 216, self.MBASE(i),
+				#		self.pd.material_preset[0].fan_speed
+				#	)
+
 				i += 1
 				self.Draw_Menu_Line(i, self.ICON_WriteEEPROM)
 			elif self.select_temp.now == self.TEMP_CASE_ABS:  # ABS preheat setting
@@ -1199,9 +1201,9 @@ class DWIN_LCD:
 					self.lcd.Frame_AreaCopy(1, 172, 76, 198, 86, self.LBLX, self.MBASE(self.PREHEAT_CASE_BED) + 3)
 					self.lcd.Frame_AreaCopy(1, 240, 104, 264, 114, self.LBLX + 27, self.MBASE(self.PREHEAT_CASE_BED) + 3)
 					self.lcd.Frame_AreaCopy(1, 1, 89, 83, 101, self.LBLX + 54, self.MBASE(self.PREHEAT_CASE_BED) + 3)  # ABS bed temp
-				if self.pd.HAS_FAN:
-					self.lcd.Frame_AreaCopy(1, 172, 76, 198, 86, self.LBLX, self.MBASE(self.PREHEAT_CASE_FAN))
-					self.lcd.Frame_AreaCopy(1, 0, 119, 64, 132, self.LBLX + 27, self.MBASE(self.PREHEAT_CASE_FAN))  # ABS fan speed
+				#if self.pd.HAS_FAN:
+				#	self.lcd.Frame_AreaCopy(1, 172, 76, 198, 86, self.LBLX, self.MBASE(self.PREHEAT_CASE_FAN))
+				#	self.lcd.Frame_AreaCopy(1, 0, 119, 64, 132, self.LBLX + 27, self.MBASE(self.PREHEAT_CASE_FAN))  # ABS fan speed
 
 				self.lcd.Frame_AreaCopy(1, 97, 165, 229, 177, self.LBLX, self.MBASE(self.PREHEAT_CASE_SAVE))
 				self.lcd.Frame_AreaCopy(1, 172, 76, 198, 86, self.LBLX + 33, self.MBASE(self.PREHEAT_CASE_SAVE))  # Save ABS configuration
@@ -1222,14 +1224,15 @@ class DWIN_LCD:
 						3, 216, self.MBASE(i),
 						self.pd.material_preset[1].bed_temp
 					)
-				if self.pd.HAS_FAN:
-					i += 1
-					self.Draw_Menu_Line(i, self.ICON_FanSpeed)
-					self.lcd.Draw_IntValue(
-						True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
-						3, 216, self.MBASE(i),
-						self.pd.material_preset[1].fan_speed
-					)
+				#if self.pd.HAS_FAN:
+				#	i += 1
+				#	self.Draw_Menu_Line(i, self.ICON_FanSpeed)
+				#	self.lcd.Draw_IntValue(
+				#		True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
+				#		3, 216, self.MBASE(i),
+				#		self.pd.material_preset[1].fan_speed
+				#	)
+				
 				i += 1
 				self.Draw_Menu_Line(i, self.ICON_WriteEEPROM)
 
@@ -1591,7 +1594,7 @@ class DWIN_LCD:
 
 	def Draw_Status_Area(self, with_update):
 		#  Clear the bottom area of the screen
-		#self.lcd.Draw_Rectangle(1, self.lcd.Color_Bg_Black, 0, self.STATUS_Y, self.lcd.DWIN_WIDTH, self.lcd.DWIN_HEIGHT - 1)
+		#not here self.lcd.Draw_Rectangle(1, self.lcd.Color_Bg_Black, 0, self.STATUS_Y, self.lcd.DWIN_WIDTH, self.lcd.DWIN_HEIGHT - 1)
 		#
 		#  Status Area
 		#
@@ -1636,15 +1639,15 @@ class DWIN_LCD:
 		)
 
 		#fan speed %
-		self.lcd.ICON_Show(self.ICON, self.ICON_FanSpeed, 190, 382)
+		self.lcd.ICON_Show(self.ICON, self.ICON_FanSpeed, 192, 382)
 		self.lcd.Draw_IntValue(
 			True, True, 0, self.lcd.DWIN_FONT_STAT,
-			self.lcd.Color_White, self.lcd.Color_Bg_Black, 3, 200 + 2 * self.STAT_CHR_W, 382,
+			self.lcd.Color_White, self.lcd.Color_Bg_Black, 3, 202 + 2 * self.STAT_CHR_W, 382,
 			self.pd.thermalManager['fan_speed'][0]
 		)
 		self.lcd.Draw_String(
 			False, False, self.lcd.DWIN_FONT_STAT,
-			self.lcd.Color_White, self.lcd.Color_Bg_Black, 200 + 5 * self.STAT_CHR_W + 2, 382,
+			self.lcd.Color_White, self.lcd.Color_Bg_Black, 202 + 5 * self.STAT_CHR_W + 2, 382,
 			"%"
 		)
 
@@ -1684,10 +1687,10 @@ class DWIN_LCD:
 
 		#z-offset
 		if self.pd.HAS_ZOFFSET_ITEM:
-			self.lcd.ICON_Show(self.ICON, self.ICON_Zoffset, 190, 410)
+			self.lcd.ICON_Show(self.ICON, self.ICON_Zoffset, 192, 410)
 			self.lcd.Draw_Signed_Float(
 				self.lcd.DWIN_FONT_STAT,
-				self.lcd.Color_Bg_Black, 2, 2, 210, 410, 
+				self.lcd.Color_Bg_Black, 2, 2, 212, 410, 
 				self.pd.BABY_Z_VAR * 100
 			)
 
@@ -1712,10 +1715,10 @@ class DWIN_LCD:
 		)
 
 		#current Z
-		self.lcd.ICON_Show(self.ICON, self.ICON_MaxSpeedZ, 178, 446)
+		self.lcd.ICON_Show(self.ICON, self.ICON_MaxSpeedZ, 181, 446)
 		self.lcd.Draw_Signed_Float(
 			self.lcd.DWIN_FONT_STAT, 
-			self.lcd.Color_Bg_Black, 3, 2, 180 + 2 * self.STAT_CHR_W, 446,
+			self.lcd.Color_Bg_Black, 3, 2, 183 + 2 * self.STAT_CHR_W, 446,
 			self.pd.current_position.z * 100
 		)
 
@@ -2066,6 +2069,10 @@ class DWIN_LCD:
 		else:
 			self.ICON_StartInfo(self.select_page.now == 3)
 
+		#clear status area here
+		self.lcd.Draw_Rectangle(1, self.lcd.Color_Bg_Black, 0, self.STATUS_Y, self.lcd.DWIN_WIDTH, self.lcd.DWIN_HEIGHT - 1)
+		self.Draw_Status_Area(False)
+		
 	def Goto_PrintProcess(self):
 		self.checkkey = self.PrintProcess
 		self.Clear_Main_Window()
