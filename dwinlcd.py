@@ -631,6 +631,7 @@ class DWIN_LCD:
 					self.Draw_Menu_Icon(self.MROWS, self.ICON_Temperature + self.index_control - 1)
 					self.Draw_More_Icon(self.CONTROL_CASE_TEMP + self.MROWS - self.index_control)  # Temperature >
 					self.Draw_More_Icon(self.CONTROL_CASE_MOVE + self.MROWS - self.index_control)  # Motion >
+					#todo
 					#if (self.index_control > self.MROWS):
 					#	self.Draw_More_Icon(self.CONTROL_CASE_INFO + self.MROWS - self.index_control)  # Info >
 					#	self.lcd.Frame_AreaCopy(1, 0, 104, 24, 114, self.LBLX, self.MBASE(self.CONTROL_CASE_INFO - 1))
@@ -666,13 +667,13 @@ class DWIN_LCD:
 			# 	self.checkkey = self.Info
 			# 	self.Draw_Info_Menu()
 			elif self.select_control.now == self.CONTROL_CASE_KLIPPER_RESTART:
-				self.klipper_restart()
-			elif self.select_control.now == self.CONTROL_CASE_FW_RESTART:
-				self.mcu_fw_restart()
+				self.pd.klipper_restart()
+			elif self.pd.select_control.now == self.CONTROL_CASE_FW_RESTART:
+				self.pd.mcu_fw_restart()
 			elif self.select_control.now == self.CONTROL_CASE_HOST_SHUTDOWN:
-				self.host_shutdown()
+				self.pd.host_shutdown()
 			elif self.select_control.now == self.CONTROL_CASE_HOST_RESTART:
-				self.host_restart()
+				self.pd.host_restart()
 
 		self.lcd.UpdateLCD()
 
@@ -1870,17 +1871,14 @@ class DWIN_LCD:
 			self.Item_Prepare_Disable(self.PREPARE_CASE_DISA)  # Disable Stepper
 		if scroll + self.PREPARE_CASE_HOME <= self.MROWS:
 			self.Item_Prepare_Home(self.PREPARE_CASE_HOME)  # Auto Home
-		if self.pd.HAS_ZOFFSET_ITEM:
-			if scroll + self.PREPARE_CASE_ZOFF <= self.MROWS:
-				self.Item_Prepare_Offset(self.PREPARE_CASE_ZOFF)  # Edit Z-Offset / Babystep / Set Home Offset
-		if self.pd.HAS_HOTEND:
-			if scroll + self.PREPARE_CASE_PLA <= self.MROWS:
-				self.Item_Prepare_PLA(self.PREPARE_CASE_PLA)  # Preheat PLA
-			if scroll + self.PREPARE_CASE_ABS <= self.MROWS:
-				self.Item_Prepare_ABS(self.PREPARE_CASE_ABS)  # Preheat ABS
-		if self.pd.HAS_PREHEAT:
-			if scroll + self.PREPARE_CASE_COOL <= self.MROWS:
-				self.Item_Prepare_Cool(self.PREPARE_CASE_COOL)  # Cooldown
+		if scroll + self.PREPARE_CASE_ZOFF <= self.MROWS:
+			self.Item_Prepare_Offset(self.PREPARE_CASE_ZOFF)  # Edit Z-Offset / Babystep / Set Home Offset
+		if scroll + self.PREPARE_CASE_PLA <= self.MROWS:
+			self.Item_Prepare_PLA(self.PREPARE_CASE_PLA)  # Preheat PLA
+		if scroll + self.PREPARE_CASE_ABS <= self.MROWS:
+			self.Item_Prepare_ABS(self.PREPARE_CASE_ABS)  # Preheat ABS
+		if scroll + self.PREPARE_CASE_COOL <= self.MROWS:
+			self.Item_Prepare_Cool(self.PREPARE_CASE_COOL)  # Cooldown
 		if (self.select_prepare.now):
 			self.Draw_Menu_Cursor(self.select_prepare.now)
 
