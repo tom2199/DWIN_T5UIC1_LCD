@@ -53,6 +53,7 @@ class HMI_value_t:
 	Bed_Temp = 0
 	Fan_speed = 0
 	print_speed = 100
+	flow_speed = 100
 	Max_Feedspeed = 0.0
 	Max_Acceleration = 0.0
 	Max_Jerk = 0.0
@@ -254,6 +255,12 @@ class PrinterData:
 	MACHINE_SIZE = "235x235x240"
 	SHORT_BUILD_VERSION = "1.00"
 	CORP_WEBSITE_E = "https://www.klipper3d.org/"
+ 
+	RESTART = "Restart"
+	KLIPPER = "Klipper "
+	FW = "FW "
+	HOST = "Host "
+	SHUTDOWN = "Shutdown"
 
 	def __init__(self, API_Key, URL='127.0.0.1'):
 		self.op = MoonrakerSocket(URL, 80, API_Key)
