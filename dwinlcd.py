@@ -512,8 +512,8 @@ class DWIN_LCD:
 
 		if (encoder_diffState == self.ENCODER_DIFF_CW):
 			if (self.select_prepare.inc(1 + self.PREPARE_CASE_TOTAL)):
-				if (self.select_prepare.now > self.MROWS and self.select_prepare.now > self.index_prepare):
-					self.index_prepare = self.select_prepare.now
+				if (self.select_prepare.now > self.MROWS and self.select_prepare.now > self.index_prepare): # Cursor past the bottom
+					self.index_prepare = self.select_prepare.now # New bottom line
 
 					# Scroll up and draw a blank bottom line
 					self.Scroll_Menu(self.DWIN_SCROLL_UP)
@@ -530,7 +530,7 @@ class DWIN_LCD:
 						if (self.index_prepare == self.PREPARE_CASE_COOL):
 							self.Item_Prepare_Cool(self.MROWS)
 				else:
-					self.Move_Highlight(1, self.select_prepare.now + self.MROWS - self.index_prepare)
+					self.Move_Highlight(1, self.select_prepare.now + self.MROWS - self.index_prepare) # Just move highlight
 
 		elif (encoder_diffState == self.ENCODER_DIFF_CCW):
 			if (self.select_prepare.dec()):
@@ -625,10 +625,14 @@ class DWIN_LCD:
 
 		if (encoder_diffState == self.ENCODER_DIFF_CW):
 			if (self.select_control.inc(1 + self.CONTROL_CASE_TOTAL)):
-				if (self.select_control.now > self.MROWS and self.select_control.now > self.index_control):
-					self.index_control = self.select_control.now
+				if (self.select_control.now > self.MROWS and self.select_control.now > self.index_control): # Cursor past the bottom
+					self.index_control = self.select_control.now # New bottom line
+
+					# Scroll up and draw a blank bottom line
 					self.Scroll_Menu(self.DWIN_SCROLL_UP)
 					self.Draw_Menu_Icon(self.MROWS, self.ICON_Temperature + self.index_control - 1)
+
+					# Draw "More" icon for sub-menus
 					self.Draw_More_Icon(self.CONTROL_CASE_TEMP + self.MROWS - self.index_control)  # Temperature >
 					self.Draw_More_Icon(self.CONTROL_CASE_MOVE + self.MROWS - self.index_control)  # Motion >
 					#todo
@@ -636,7 +640,8 @@ class DWIN_LCD:
 					#	self.Draw_More_Icon(self.CONTROL_CASE_INFO + self.MROWS - self.index_control)  # Info >
 					#	self.lcd.Frame_AreaCopy(1, 0, 104, 24, 114, self.LBLX, self.MBASE(self.CONTROL_CASE_INFO - 1))
 				else:
-					self.Move_Highlight(1, self.select_control.now + self.MROWS - self.index_control)
+					self.Move_Highlight(1, self.select_control.now + self.MROWS - self.index_control) # Just move highlight
+
 		elif (encoder_diffState == self.ENCODER_DIFF_CCW):
 			if (self.select_control.dec()):
 				if (self.select_control.now < self.index_control - self.MROWS):
@@ -668,7 +673,7 @@ class DWIN_LCD:
 			# 	self.Draw_Info_Menu()
 			elif self.select_control.now == self.CONTROL_CASE_KLIPPER_RESTART:
 				self.pd.klipper_restart()
-			elif self.pd.select_control.now == self.CONTROL_CASE_FW_RESTART:
+			elif self.select_control.now == self.CONTROL_CASE_FW_RESTART:
 				self.pd.mcu_fw_restart()
 			elif self.select_control.now == self.CONTROL_CASE_HOST_SHUTDOWN:
 				self.pd.host_shutdown()
