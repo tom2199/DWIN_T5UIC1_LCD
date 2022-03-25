@@ -285,12 +285,13 @@ class DWIN_LCD:
 	CONTROL_CASE_HOST_SHUTDOWN = 6
 	CONTROL_CASE_TOTAL = 6
 
+	#todo FW retract here
 	TUNE_CASE_SPEED = 1
 	TUNE_CASE_FLOW = (TUNE_CASE_SPEED + 1)
 	TUNE_CASE_FAN = (TUNE_CASE_FLOW + 1)	#sur
 	TUNE_CASE_ZOFF = (TUNE_CASE_FAN + 1)
-	TUNE_CASE_TEMP = (TUNE_CASE_ZOFF + 1)
-	TUNE_CASE_BED = (TUNE_CASE_TEMP + 1)
+	TUNE_CASE_TEMP = (TUNE_CASE_ZOFF + 0)
+	TUNE_CASE_BED = (TUNE_CASE_TEMP + 0)
 	TUNE_CASE_TOTAL = TUNE_CASE_BED
 
 	TEMP_CASE_TEMP = (0 + 1)
@@ -452,8 +453,10 @@ class DWIN_LCD:
 					self.checkkey = self.Leveling
 					self.HMI_Leveling()
 				else:
-					self.checkkey = self.Info
-					self.Draw_Info_Menu()
+					#self.checkkey = self.Info
+					#self.Draw_Info_Menu()
+					self.checkkey = self.Tune	#dev sur
+					self.Draw_Tune_Menu()
 
 		self.lcd.UpdateLCD()
 
@@ -802,13 +805,22 @@ class DWIN_LCD:
 		encoder_diffState = self.get_encoder_state()
 		if (encoder_diffState == self.ENCODER_DIFF_NO):
 			return
+
 		if (encoder_diffState == self.ENCODER_DIFF_CW):
 			if (self.select_tune.inc(1 + self.TUNE_CASE_TOTAL)):
 				if (self.select_tune.now > self.MROWS and self.select_tune.now > self.index_tune):
 					self.index_tune = self.select_tune.now
 					self.Scroll_Menu(self.DWIN_SCROLL_UP)
+
+					#self.Draw_Menu_Icon(self.MROWS, self.ICON_...
+
+				#show lover invisible
+				#if self.index_tune == self.TUNE_CASE_...:
+				#	self.Item_Prepare_...(self.MROWS)
+
 				else:
 					self.Move_Highlight(1, self.select_tune.now + self.MROWS - self.index_tune)
+
 		elif (encoder_diffState == self.ENCODER_DIFF_CCW):
 			if (self.select_tune.dec()):
 				if (self.select_tune.now < self.index_tune - self.MROWS):
@@ -818,6 +830,7 @@ class DWIN_LCD:
 						self.Draw_Back_First()
 				else:
 					self.Move_Highlight(-1, self.select_tune.now + self.MROWS - self.index_tune)
+
 		elif (encoder_diffState == self.ENCODER_DIFF_ENTER):
 			if self.select_tune.now == 0:  # Back
 				self.select_print.set(0)
@@ -1971,6 +1984,7 @@ class DWIN_LCD:
 			self.lcd.Draw_Line(self.lcd.Line_Color, 16, self.MBASE(2) + i * 73, 256, 156 + i * 73)
 
 	def Draw_Tune_Menu(self):
+		#todo FW retract
 		self.Clear_Main_Window()
 		scroll = self.MROWS - self.index_control
 		self.Draw_Back_First(self.select_tune.now == 0) # <Back
@@ -1995,25 +2009,27 @@ class DWIN_LCD:
 				True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
 				3, 216, self.MBASE(self.TUNE_CASE_FLOW), self.pd.flowrate_percentage)
 
-		if scroll + self.TUNE_CASE_TEMP <= self.MROWS:
-			self.lcd.Frame_AreaCopy(1, 197, 104, 238, 114, self.LBLX, self.MBASE(self.TUNE_CASE_TEMP))  # Hotend...
-			self.lcd.Frame_AreaCopy(1, 1, 89, 83, 101, self.LBLX + 44, self.MBASE(self.TUNE_CASE_TEMP))  # Temperature
-			self.Draw_Menu_Line(self.TUNE_CASE_TEMP, self.ICON_HotendTemp)
-			self.lcd.Draw_IntValue(
-				True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
-				3, 216, self.MBASE(self.TUNE_CASE_TEMP),
-				self.pd.thermalManager['temp_hotend'][0]['target']
-			)
+		# todo FW retract here
 
-		if scroll + self.TUNE_CASE_BED <= self.MROWS:		
-			self.lcd.Frame_AreaCopy(1, 240, 104, 264, 114, self.LBLX, self.MBASE(self.TUNE_CASE_BED))  # Bed...
-			self.lcd.Frame_AreaCopy(1, 1, 89, 83, 101, self.LBLX + 27, self.MBASE(self.TUNE_CASE_BED))  # ...Temperature
-			self.Draw_Menu_Line(self.TUNE_CASE_BED, self.ICON_BedTemp)
-			self.lcd.Draw_IntValue(
-				True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
-				3, 216, self.MBASE(self.TUNE_CASE_BED),
-    			self.pd.thermalManager['temp_bed']['target']
-    		)
+		# not implemented
+		# if scroll + self.TUNE_CASE_TEMP <= self.MROWS:
+		# 	self.lcd.Frame_AreaCopy(1, 197, 104, 238, 114, self.LBLX, self.MBASE(self.TUNE_CASE_TEMP))  # Hotend...
+		# 	self.lcd.Frame_AreaCopy(1, 1, 89, 83, 101, self.LBLX + 44, self.MBASE(self.TUNE_CASE_TEMP))  # Temperature
+		# 	self.Draw_Menu_Line(self.TUNE_CASE_TEMP, self.ICON_HotendTemp)
+		# 	self.lcd.Draw_IntValue(
+		# 		True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
+		# 		3, 216, self.MBASE(self.TUNE_CASE_TEMP),
+		# 		self.pd.thermalManager['temp_hotend'][0]['target']
+		# 	)
+		# if scroll + self.TUNE_CASE_BED <= self.MROWS:		
+		# 	self.lcd.Frame_AreaCopy(1, 240, 104, 264, 114, self.LBLX, self.MBASE(self.TUNE_CASE_BED))  # Bed...
+		# 	self.lcd.Frame_AreaCopy(1, 1, 89, 83, 101, self.LBLX + 27, self.MBASE(self.TUNE_CASE_BED))  # ...Temperature
+		# 	self.Draw_Menu_Line(self.TUNE_CASE_BED, self.ICON_BedTemp)
+		# 	self.lcd.Draw_IntValue(
+		# 		True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
+		# 		3, 216, self.MBASE(self.TUNE_CASE_BED),
+    	# 		self.pd.thermalManager['temp_bed']['target']
+    	# 	)
 
 		if scroll + self.TUNE_CASE_FAN <= self.MROWS:   
 			self.lcd.Frame_AreaCopy(1, 0, 119, 64, 132, self.LBLX, self.MBASE(self.TUNE_CASE_FAN))  # Fan speed
