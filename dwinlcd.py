@@ -635,7 +635,11 @@ class DWIN_LCD:
 					# Draw "More" icon for sub-menus
 					self.Draw_More_Icon(self.CONTROL_CASE_TEMP + self.MROWS - self.index_control)  # Temperature >
 					self.Draw_More_Icon(self.CONTROL_CASE_MOVE + self.MROWS - self.index_control)  # Motion >
-					#todo
+
+					#show lower invisible
+					if (self.index_control == self.CONTROL_CASE_HOST_SHUTDOWN):
+						self.Item_Prepare_host_shutdown(self.MROWS)
+				
 					#if (self.index_control > self.MROWS):
 					#	self.Draw_More_Icon(self.CONTROL_CASE_INFO + self.MROWS - self.index_control)  # Info >
 					#	self.lcd.Frame_AreaCopy(1, 0, 104, 24, 114, self.LBLX, self.MBASE(self.CONTROL_CASE_INFO - 1))
@@ -647,17 +651,20 @@ class DWIN_LCD:
 				if (self.select_control.now < self.index_control - self.MROWS):
 					self.index_control -= 1
 					self.Scroll_Menu(self.DWIN_SCROLL_DOWN)
+
 					if (self.index_control == self.MROWS):
 						self.Draw_Back_First()
 					else:
 						self.Draw_Menu_Line(0, self.ICON_Temperature + self.select_control.now - 1)
+
 					self.Draw_More_Icon(0 + self.MROWS - self.index_control + 1)  # Temperature >
 					self.Draw_More_Icon(1 + self.MROWS - self.index_control + 1)  # Motion >
 				else:
 					self.Move_Highlight(-1, self.select_control.now + self.MROWS - self.index_control)
+
 		elif (encoder_diffState == self.ENCODER_DIFF_ENTER):
 			if (self.select_control.now == 0):  # Back
-				self.select_page.set(2)
+				self.select_page.set(2) #ret to Control in MainMenu
 				self.Goto_MainMenu()
 			elif (self.select_control.now == self.CONTROL_CASE_TEMP):  # Temperature
 				self.checkkey = self.TemperatureID
@@ -675,10 +682,12 @@ class DWIN_LCD:
 				self.pd.klipper_restart()
 			elif self.select_control.now == self.CONTROL_CASE_FW_RESTART:
 				self.pd.mcu_fw_restart()
-			elif self.select_control.now == self.CONTROL_CASE_HOST_SHUTDOWN:
-				self.pd.host_shutdown()
 			elif self.select_control.now == self.CONTROL_CASE_HOST_RESTART:
-				self.pd.host_restart()
+				self.lcdExit()
+				self.pd.host_restart()				
+			elif self.select_control.now == self.CONTROL_CASE_HOST_SHUTDOWN:
+				self.lcdExit()
+				self.pd.host_shutdown()
 
 		self.lcd.UpdateLCD()
 
@@ -1928,19 +1937,12 @@ class DWIN_LCD:
 			self.Draw_Menu_Line(self.CONTROL_CASE_HOST_RESTART, self.ICON_Contact)
 			#self.Draw_More_Icon(self.CONTROL_CASE_HOST_RESTART)
 		if scroll + self.CONTROL_CASE_HOST_SHUTDOWN <= self.MROWS:
-			self.lcd.Draw_String(
-				False, False, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
-				self.LBLX, self.MBASE(self.CONTROL_CASE_HOST_SHUTDOWN),
-				self.pd.HOST + self.pd.SHUTDOWN
-			)
-			self.Draw_Menu_Line(self.CONTROL_CASE_HOST_SHUTDOWN, self.ICON_Contact)
-			#self.Draw_More_Icon(self.CONTROL_CASE_HOST_SHUTDOWN)
+			self.Item_Prepare_host_shutdown(self.CONTROL_CASE_HOST_SHUTDOWN)
      
 		if self.select_control.now: # and self.select_control.now < self.MROWS:
 			self.Draw_Menu_Cursor(self.select_control.now)
 
 
-    
 	def Draw_Info_Menu(self):
 		self.Clear_Main_Window()
 
@@ -2061,7 +2063,8 @@ class DWIN_LCD:
 		i = 0
 		if self.pd.HAS_HOTEND:
 			i += 1
-			self.Draw_Menu_Line(self.ICON_SetEndTemp + (self.TEMP_CASE_TEMP) - 1)
+			#?wtf self.Draw_Menu_Line(self.ICON_SetEndTemp + (self.TEMP_CASE_TEMP) - 1)
+			self.Draw_Menu_Line(self.TEMP_CASE_TEMP, self.ICON_SetEndTemp)
 			self.lcd.Draw_IntValue(
 				True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
 				3, 216, self.MBASE(i),
@@ -2069,7 +2072,8 @@ class DWIN_LCD:
 			)
 		if self.pd.HAS_HEATED_BED:
 			i += 1
-			self.Draw_Menu_Line(self.ICON_SetEndTemp + (self.TEMP_CASE_BED) - 1)
+			#self.Draw_Menu_Line(self.ICON_SetEndTemp + (self.TEMP_CASE_BED) - 1)
+			self.Draw_Menu_Line(self.TEMP_CASE_BED, self.ICON_SetBedTemp)
 			self.lcd.Draw_IntValue(
 				True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
 				3, 216, self.MBASE(i),
@@ -2077,7 +2081,8 @@ class DWIN_LCD:
 			)
 		if self.pd.HAS_FAN:
 			i += 1
-			self.Draw_Menu_Line(self.ICON_SetEndTemp + (self.TEMP_CASE_FAN) - 1)
+			#self.Draw_Menu_Line(self.ICON_SetEndTemp + (self.TEMP_CASE_FAN) - 1)
+			self.Draw_Menu_Line(self.TEMP_CASE_FAN, self.ICON_FanSpeed)
 			self.lcd.Draw_IntValue(
 				True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
 				3, 216, self.MBASE(i),
@@ -2086,10 +2091,12 @@ class DWIN_LCD:
 		if self.pd.HAS_HOTEND:
 			# PLA/ABS items have submenus
 			i += 1
-			self.Draw_Menu_Line(self.ICON_SetEndTemp + (self.TEMP_CASE_PLA) - 1)
+			#self.Draw_Menu_Line(self.ICON_SetEndTemp + (self.TEMP_CASE_PLA) - 1)
+			self.Draw_Menu_Line(self.TEMP_CASE_PLA, self.ICON_SetPLAPreheat)
 			self.Draw_More_Icon(i)
 			i += 1
-			self.Draw_Menu_Line(self.ICON_SetEndTemp + (self.TEMP_CASE_ABS) - 1)
+			#self.Draw_Menu_Line(self.ICON_SetEndTemp + (self.TEMP_CASE_ABS) - 1)
+			self.Draw_Menu_Line(self.TEMP_CASE_ABS, self.ICON_SetABSPreheat)
 			self.Draw_More_Icon(i)
 
 	def Draw_Motion_Menu(self):
@@ -2105,13 +2112,16 @@ class DWIN_LCD:
 			self.Draw_Menu_Cursor(self.select_motion.now)
 
 		i = 1
-		self.Draw_Menu_Line(self.ICON_MaxSpeed + (self.MOTION_CASE_RATE) - 1)
+		#self.Draw_Menu_Line(self.ICON_MaxSpeed + (self.MOTION_CASE_RATE) - 1)
+		self.Draw_Menu_Line(self.MOTION_CASE_RATE, self.ICON_MaxSpeed)
 		self.Draw_More_Icon(i)
 		i += 1
-		self.Draw_Menu_Line(self.ICON_MaxSpeed + (self.MOTION_CASE_ACCEL) - 1)
+		#self.Draw_Menu_Line(self.ICON_MaxSpeed + (self.MOTION_CASE_ACCEL) - 1)
+		self.Draw_Menu_Line(self.MOTION_CASE_ACCEL, self.ICON_MaxSpeed)
 		self.Draw_More_Icon(i)
 		i += 1
-		self.Draw_Menu_Line(self.ICON_MaxSpeed + (self.MOTION_CASE_STEPS) - 1)
+		#self.Draw_Menu_Line(self.ICON_MaxSpeed + (self.MOTION_CASE_STEPS) - 1)
+		self.Draw_Menu_Line(self.MOTION_CASE_STEPS, self.ICON_MaxSpeed)
 		self.Draw_More_Icon(i)
 
 	def Draw_Move_Menu(self):
@@ -2426,6 +2436,15 @@ class DWIN_LCD:
 	def Item_Prepare_Cool(self, row):
 		self.lcd.Frame_AreaCopy(1, 200, 76, 264, 86, self.LBLX, self.MBASE(row))  # "Cooldown"
 		self.Draw_Menu_Line(row, self.ICON_Cool)
+
+	def Item_Prepare_host_shutdown(self, row):
+		self.lcd.Draw_String(
+			False, False, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
+			self.LBLX, self.MBASE(row),
+			self.pd.HOST + self.pd.SHUTDOWN
+		)
+		self.Draw_Menu_Line(row, self.ICON_Contact)
+		#self.Draw_More_Icon(self.CONTROL_CASE_HOST_SHUTDOWN)
 
 	# --------------------------------------------------------------#
 	# --------------------------------------------------------------#

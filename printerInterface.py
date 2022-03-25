@@ -498,18 +498,22 @@ class PrinterData:
 
 	def resume_job(self): #fixed
 		print('Resuming job:')
-		self.postREST('printer/print/resume', json=None)
+		self.postREST('/printer/print/resume', json=None)
 
 	def klipper_restart(self): #sur POST /printer/restart
-		self.postREST('printer/restart', json=None)
+		print('klipper restart:')
+		self.postREST('/printer/restart', json=None)
 
 	def mcu_fw_restart(self): #sur POST /printer/firmware_restart
+		print('fw restart:')
 		self.postREST('/printer/firmware_restart', json=None)
 
 	def host_shutdown(self): #sur POST /machine/shutdown
+		print('host shutdown:')
 		self.postREST('/machine/shutdown', json=None)
 
 	def host_restart(self): #sur POST /machine/reboot
+		print('host restart')
 		self.postREST('/machine/reboot', json=None)
 
 	def set_feedrate(self, fr):
