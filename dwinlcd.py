@@ -288,11 +288,15 @@ class DWIN_LCD:
 	#todo FW retract here
 	TUNE_CASE_SPEED = 1
 	TUNE_CASE_FLOW = (TUNE_CASE_SPEED + 1)
-	TUNE_CASE_FAN = (TUNE_CASE_FLOW + 1)	#sur
+	TUNE_CASE_FAN = (TUNE_CASE_FLOW + 1)	# + fan
 	TUNE_CASE_ZOFF = (TUNE_CASE_FAN + 1)
-	TUNE_CASE_TEMP = (TUNE_CASE_ZOFF + 0)
-	TUNE_CASE_BED = (TUNE_CASE_TEMP + 0)
-	TUNE_CASE_TOTAL = TUNE_CASE_BED
+	TUNE_CASE_RETRACT_L = (TUNE_CASE_ZOFF + 1)		# + fw_retract_length
+	TUNE_CASE_RETRACT_S = (TUNE_CASE_RETRACT_L + 1)		# + fw_retract_speed
+	TUNE_CASE_UNRETRACT_S = (TUNE_CASE_RETRACT_S + 1)	# + fw_unretract_speed
+	TUNE_CASE_UNRETRACT_EXTRA_L = (TUNE_CASE_UNRETRACT_S + 1)		# + fw_unretract_extra_length
+	TUNE_CASE_TOTAL = TUNE_CASE_UNRETRACT_EXTRA_L
+	#TUNE_CASE_TEMP = (TUNE_CASE_ZOFF + 0)	# - CASE_TEMP
+	#TUNE_CASE_BED = (TUNE_CASE_TEMP + 0)	# - CASE_BED
 
 	TEMP_CASE_TEMP = (0 + 1)
 	TEMP_CASE_BED = (TEMP_CASE_TEMP + 1)
@@ -936,6 +940,50 @@ class DWIN_LCD:
 			True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Select_Color,
 			3, 216, self.MBASE(fan_line),
 			self.pd.HMI_ValueStruct.Fan_speed
+		)
+
+	def HMI_fw_retract_length(self):	#sur
+		encoder_diffState = self.get_encoder_state()
+		if (encoder_diffState == self.ENCODER_DIFF_NO):
+			return
+
+		fw_retract_length_line = self.TUNE_CASE_RETRACT_L + self.MROWS - self.index_tune # ret to Tune menu
+
+		if (encoder_diffState == self.ENCODER_DIFF_ENTER):
+			#self.encoderRate = True
+			self.EncoderRateLimit = True
+
+			self.checkkey = self.Tune
+
+			self.lcd.Draw_FloatValue(
+				True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Select_Color,
+				3, 1, 216, self.MBASE(fw_retract_length_line),
+				self.pd.HMI_ValueStruct.fw_retract_length
+			)
+
+			self.pd.set_fw_retract_length(self.pd.HMI_ValueStruct.fw_retract_length)
+				#self.pd.HMI_ValueStruct.fw_retract_speed,
+				#self.pd.HMI_ValueStruct.fw_unretract_speed,
+				#self.pd.HMI_ValueStruct.fw_unretract_extra_length,
+
+			return
+
+		elif (encoder_diffState == self.ENCODER_DIFF_CW):
+			self.pd.HMI_ValueStruct.fw_retract_length += 1
+
+		elif (encoder_diffState == self.ENCODER_DIFF_CCW):
+			self.pd.HMI_ValueStruct.fw_retract_length -= 1
+
+
+		if self.pd.HMI_ValueStruct.fw_retract_length < 0:
+			self.pd.HMI_ValueStruct.fw_retract_length = 0
+		#if self.pd.HMI_ValueStruct.fw_retract_length > 100:
+		#	self.pd.HMI_ValueStruct.fw_retract_length = 100
+
+		self.lcd.Draw_FloatValue(
+			True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Select_Color,
+			3, 1, 216, self.MBASE(fw_retract_length_line),
+			self.pd.HMI_ValueStruct.fw_retract_length
 		)
 
 	def HMI_AxisMove(self):

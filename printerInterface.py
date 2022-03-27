@@ -64,7 +64,10 @@ class HMI_value_t:
 	Move_E_scale = 0.0
 	offset_value = 0.0
 	show_mode = 0  # -1: Temperature control    0: Printing temperature
-
+	fw_retract_length = 25.0
+	fw_retract_speed = 0.5
+	fw_unretract_speed = 0.5
+	fw_unretract_extra_length = 0.0
 
 class HMI_Flag_t:
 	language = 0
@@ -236,6 +239,11 @@ class PrinterData:
 	temphot = 0
 	tempbed = 0
 
+	fw_retract_length = 25
+	fw_retract_speed = 0.5
+	fw_unretract_speed = fw_retract_speed
+	fw_unretract_extra_length = 0
+
 	HMI_ValueStruct = HMI_value_t()
 	HMI_flag = HMI_Flag_t()
 
@@ -391,6 +399,30 @@ class PrinterData:
 		self.X_MAX_POS = int(volume[0])
 		self.Y_MAX_POS = int(volume[1])
 
+		#list_objects = self.getREST('/printer/objects/list')
+		#print(list_objects)
+		#{'result': {'objects': 
+		# ['webhooks', 'configfile', 'mcu', 'mcu rpi', 
+		# 'gcode_macro set_Z_0', 'gcode_macro PID_calibrate_240', ......
+		# 'firmware_retraction', 'heaters', 'heater_bed', 'fan', 'gcode_move', 'probe', 'bed_mesh', 'tmc2208 extruder', 
+		# 'filament_switch_sensor Filament_sensor', 'print_stats', 'virtual_sdcard', 'display_status', 'pause_resume', 
+		# 'output_pin BEEPER_pin', 'temperature_host rpi_temp', 'temperature_sensor rpi_temp', 'temperature_sensor mcu_temp', 
+		# 'motion_report', 'query_endstops', 'idle_timeout', 'system_stats', 'toolhead', 'extruder']}}
+
+		#fwr = self.getREST('/printer/objects/query?firmware_retraction')
+		#print(fwr)
+		#{'result': {'status': {'firmware_retraction': {'retract_length': 0.3, 'unretract_extra_length': 0.0, 'unretract_speed': 20.0, 'retract_speed': 20.0}}, 'eventtime': 2476.093258638}}
+
+		fwr = self.getREST('/printer/objects/query?firmware_retraction')['result']['status']['firmware_retraction']
+		#firmware_retraction = fwr['firmware_retraction']
+		#print(fwr['retract_speed'])
+
+		self.fw_retract_length = fwr['retract_length']
+		self.fw_retract_speed = fwr['retract_speed']
+		self.fw_unretract_speed = fwr['unretract_speed']
+		self.fw_unretract_extra_length = fwr['unretract_extra_length']
+
+
 	def GetFiles(self, refresh=False):
 		if not self.files or refresh:
 			self.files = self.getREST('/server/files/list')["result"]
@@ -530,6 +562,31 @@ class PrinterData:
 	def set_flowrate(self, fr):
 		self.flowrate_percentage = fr
 		self.sendGCode('M221 S%s' % fr)
+
+	# def set_fw_retract(self, rl, rs, us, uel):
+	# 	#SET_RETRACTION [RETRACT_LENGTH=<mm>] [RETRACT_SPEED=<mm/s>] [UNRETRACT_EXTRA_LENGTH=<mm>] [UNRETRACT_SPEED=<mm/s>]
+	# 	self.fw_retract_length = rl
+	# 	self.fw_retract_speed = rs
+	# 	self.fw_unretract_speed = us
+	# 	self.fw_unretract_extra_length = uel
+	# 	self.sendGCode('SET_RETRACTION RETRACT_LENGTH=%s RETRACT_SPEED=%s UNRETRACT_SPEED=%s UNRETRACT_EXTRA_LENGTH=%s'
+	# 		% rl, rs, us, uel)
+
+	def set_fw_retract_length(self, fr):
+		self.fw_retract_length = fr
+		self.sendGCode('SET_RETRACTION RETRACT_LENGTH=%s' % fr)
+
+	def set_fw_retract_speed(self, fr):
+		self.fw_retract_speed = fr
+		self.sendGCode('SET_RETRACTION RETRACT_SPEED=%s' % fr)
+
+	def set_fw_unretract_speed(self, fr):
+		self.fw_unretract_speed = fr
+		self.sendGCode('SET_RETRACTION UNRETRACT_SPEED=%s' % fr)
+
+	def set_fw_unretract_extra_length(self, fr):
+		self.fw_unretract_extra_length = fr
+		self.sendGCode('SET_RETRACTION UNRETRACT_EXTRA_LENGTH=%s' % fr)
 
 	def home(self, homeZ=False): #fixed using gcode
 		script = 'G28 X Y'
