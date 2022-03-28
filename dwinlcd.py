@@ -550,8 +550,8 @@ class DWIN_LCD:
 
 					if (self.index_prepare == self.MROWS):
 						self.Draw_Back_First()
-					else:
-						self.Draw_Menu_Line(0, self.ICON_Axis + self.select_prepare.now - 1)
+					#else: #sur
+					#	self.Draw_Menu_Line(0, self.ICON_Axis + self.select_prepare.now - 1)
 
 					if (self.index_prepare < 7):
 						self.Draw_More_Icon(self.MROWS - self.index_prepare + 1)
@@ -815,8 +815,10 @@ class DWIN_LCD:
 
 		if (encoder_diffState == self.ENCODER_DIFF_CW):
 			if (self.select_tune.inc(1 + self.TUNE_CASE_TOTAL)):
-				if (self.select_tune.now > self.MROWS and self.select_tune.now > self.index_tune):
-					self.index_tune = self.select_tune.now
+
+				if (self.select_tune.now > self.MROWS and self.select_tune.now > self.index_tune):	# Cursor past the bottom
+
+					self.index_tune = self.select_tune.now	# New bottom line
 					self.Scroll_Menu(self.DWIN_SCROLL_UP)
 
 					#self.Draw_Menu_Icon(self.MROWS, self.ICON_...
@@ -830,9 +832,9 @@ class DWIN_LCD:
 
 					if (self.index_tune == self.TUNE_CASE_RETRACT_S):
 						self.Item_Prepare_fw_retract_speed(self.MROWS)
-					if (self.index_tune == self.TUNE_CASE_UNRETRACT_S):
+					elif (self.index_tune == self.TUNE_CASE_UNRETRACT_S):
 						self.Item_Prepare_fw_unretract_speed(self.MROWS)
-					if (self.index_tune == self.TUNE_CASE_UNRETRACT_EXTRA_L):
+					elif (self.index_tune == self.TUNE_CASE_UNRETRACT_EXTRA_L):
 						self.Item_Prepare_fw_unretract_extra_length(self.MROWS)
 
 				else:
@@ -843,16 +845,17 @@ class DWIN_LCD:
 				if (self.select_tune.now < self.index_tune - self.MROWS):
 					self.index_tune -= 1
 					self.Scroll_Menu(self.DWIN_SCROLL_DOWN)
+
 					if (self.index_tune == self.MROWS):
 						self.Draw_Back_First()
 
 					#show upper lines that may be invisible
-					if (self.index_tune == self.TUNE_CASE_SPEED):
-						self.Item_Prepare_Speed(self.MROWS)
-					if (self.index_tune == self.TUNE_CASE_FLOW):
-						self.Item_Prepare_Flow(self.MROWS)
-					if (self.index_tune == self.TUNE_CASE_FAN):
-						self.Item_Prepare_Fan(self.MROWS)
+					if (self.index_tune == self.MROWS + self.TUNE_CASE_SPEED):  #6
+						self.Item_Prepare_Speed(0)
+					elif (self.index_tune == self.MROWS + self.TUNE_CASE_FLOW):
+						self.Item_Prepare_Flow(0)
+					elif (self.index_tune == self.MROWS + self.TUNE_CASE_FAN):
+						self.Item_Prepare_Fan(0)
       
 				else:
 					self.Move_Highlight(-1, self.select_tune.now + self.MROWS - self.index_tune)
@@ -896,12 +899,13 @@ class DWIN_LCD:
 					self.pd.HMI_ValueStruct.offset_value
 				)
 
+			# Fw_retract
 			elif self.select_tune.now == self.TUNE_CASE_RETRACT_L:	# Fw_retract_length
 				self.checkkey = self.Key_FW_retract_length
 				self.lcd.Draw_Signed_Float(
-					self.lcd.font8x16, self.lcd.Select_Color, 2, 1, 202,
+					self.lcd.font8x16, self.lcd.Select_Color, 2, 1, 210,
 					self.MBASE(self.TUNE_CASE_RETRACT_L + self.MROWS - self.index_tune),
-					self.pd.HMI_ValueStruct.fw_retract_length
+					self.pd.fw_retract_length * 10
 				)
 				self.EncoderRateLimit = False
 			elif self.select_tune.now == self.TUNE_CASE_RETRACT_S:	# fw_retract_speed
@@ -909,7 +913,7 @@ class DWIN_LCD:
 				self.lcd.Draw_Signed_Float(
 					self.lcd.font8x16, self.lcd.Select_Color, 2, 1, 202,
 					self.MBASE(self.TUNE_CASE_RETRACT_S + self.MROWS - self.index_tune),
-					self.pd.HMI_ValueStruct.fw_retract_speed
+					self.pd.fw_retract_speed
 				)
 				self.EncoderRateLimit = False
 			elif self.select_tune.now == self.TUNE_CASE_UNRETRACT_S:	# fw_unretract_speed
@@ -917,7 +921,7 @@ class DWIN_LCD:
 				self.lcd.Draw_Signed_Float(
 					self.lcd.font8x16, self.lcd.Select_Color, 2, 1, 202,
 					self.MBASE(self.TUNE_CASE_UNRETRACT_S + self.MROWS - self.index_tune),
-					self.pd.HMI_ValueStruct.fw_unretract_speed
+					self.pd.fw_unretract_speed
 				)
 				self.EncoderRateLimit = False
 			elif self.select_tune.now == self.TUNE_CASE_UNRETRACT_EXTRA_L :	# fw_unretract_extra_length
@@ -925,7 +929,7 @@ class DWIN_LCD:
 				self.lcd.Draw_Signed_Float(
 					self.lcd.font8x16, self.lcd.Select_Color, 2, 1, 202,
 					self.MBASE(self.TUNE_CASE_UNRETRACT_EXTRA_L  + self.MROWS - self.index_tune),
-					self.pd.HMI_ValueStruct.fw_unretract_extra_length
+					self.pd.fw_unretract_extra_length
 				)
 				self.EncoderRateLimit = False
 
@@ -1013,12 +1017,12 @@ class DWIN_LCD:
 			self.checkkey = self.Tune
 
 			self.lcd.Draw_FloatValue(
-				True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Select_Color,
-				2, 1, 216, self.MBASE(fw_retract_length_line),
-				self.pd.HMI_ValueStruct.fw_retract_length
+				True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
+				2, 1, 210, self.MBASE(fw_retract_length_line),
+				self.pd.fw_retract_length * 10
 			)
 
-			self.pd.set_fw_retract_length(self.pd.HMI_ValueStruct.fw_retract_length)
+			self.pd.set_fw_retract_length(self.pd.fw_retract_length)
 				#self.pd.HMI_ValueStruct.fw_retract_speed,
 				#self.pd.HMI_ValueStruct.fw_unretract_speed,
 				#self.pd.HMI_ValueStruct.fw_unretract_extra_length,
@@ -1026,21 +1030,21 @@ class DWIN_LCD:
 			return
 
 		elif (encoder_diffState == self.ENCODER_DIFF_CW):
-			self.pd.HMI_ValueStruct.fw_retract_length += 1
+			self.pd.fw_retract_length += 0.1
 
 		elif (encoder_diffState == self.ENCODER_DIFF_CCW):
-			self.pd.HMI_ValueStruct.fw_retract_length -= 1
+			self.pd.fw_retract_length -= 0.1
 
 
-		if self.pd.HMI_ValueStruct.fw_retract_length < 0:
-			self.pd.HMI_ValueStruct.fw_retract_length = 0
+		if self.pd.fw_retract_length < 0:
+			self.pd.fw_retract_length = 0.0
 		#if self.pd.HMI_ValueStruct.fw_retract_length > 100:
 		#	self.pd.HMI_ValueStruct.fw_retract_length = 100
 
 		self.lcd.Draw_FloatValue(
 			True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Select_Color,
-			3, 1, 216, self.MBASE(fw_retract_length_line),
-			self.pd.HMI_ValueStruct.fw_retract_length
+			2, 1, 210, self.MBASE(fw_retract_length_line),
+			self.pd.fw_retract_length * 10
 		)
 
 	def HMI_AxisMove(self):
@@ -2114,14 +2118,8 @@ class DWIN_LCD:
      			self.pd.BABY_Z_VAR * 100
 		 	)
 
-		if scroll + self.TUNE_CASE_RETRACT_L <= self.MROWS:   
-			self.lcd.Frame_AreaCopy(1, 93, 179, 141, 189, self.LBLX, self.MBASE(self.TUNE_CASE_RETRACT_L))  # fw retract length
-			self.Draw_Menu_Line(self.TUNE_CASE_RETRACT_L, self.ICON_ResumeEEPROM)
-			self.lcd.Draw_Signed_Float(
-		 		self.lcd.font8x16, self.lcd.Color_Bg_Black,
-     			2, 1, 202, self.MBASE(self.TUNE_CASE_RETRACT_L),
-     			self.pd.fw_retract_length
-		 	)
+		if scroll + self.TUNE_CASE_RETRACT_L <= self.MROWS:
+			self.Item_Prepare_fw_retract_length(self.TUNE_CASE_RETRACT_L)
 
 		if scroll + self.TUNE_CASE_RETRACT_S <= self.MROWS:
 			self.Item_Prepare_fw_retract_speed(self.TUNE_CASE_RETRACT_S)
@@ -2593,42 +2591,55 @@ class DWIN_LCD:
  		self.pd.thermalManager['fan_speed'][0]
 	 	)
 
-	def Item_Prepare_fw_retract_speed(self, row):
+	def Item_Prepare_fw_retract_length(self, row):
 		self.lcd.Draw_String(
-			False, False, self.lcd.font8x16, self.lcd.Color_White,
+			False, False, self.lcd.font8x16, self.lcd.Color_Yellow,
 			self.lcd.Color_Bg_Window, self.LBLX, self.MBASE(row),
-			"FW Retract speed"
+			"Retract length"
 		)
 		self.Draw_Menu_Line(row, self.ICON_ReadEEPROM)
 		self.lcd.Draw_Signed_Float(
 			self.lcd.font8x16, self.lcd.Color_Bg_Black,
-     		2, 1, 202, self.MBASE(row),
+     		2, 1, 210, self.MBASE(row),
+     		self.pd.fw_retract_length * 10
+		)
+
+	def Item_Prepare_fw_retract_speed(self, row):
+		self.lcd.Draw_String(
+			False, False, self.lcd.font8x16, self.lcd.Color_Yellow,
+			self.lcd.Color_Bg_Window, self.LBLX, self.MBASE(row),
+			"Retract speed"
+		)
+		self.Draw_Menu_Line(row, self.ICON_Speed)
+		self.lcd.Draw_Signed_Float(
+			self.lcd.font8x16, self.lcd.Color_Bg_Black,
+     		2, 1, 216, self.MBASE(row),
      		self.pd.fw_retract_speed
 		)
      
 	def Item_Prepare_fw_unretract_speed(self, row):
 		self.lcd.Draw_String(
-			False, False, self.lcd.font8x16, self.lcd.Color_White,
+			False, False, self.lcd.font8x16, self.lcd.Color_Yellow,
 			self.lcd.Color_Bg_Window, self.LBLX, self.MBASE(row),
-			"FW Unretract speed"
+			"Unretract speed"
 		)
 		self.Draw_Menu_Line(row, self.ICON_WriteEEPROM)
 		self.lcd.Draw_Signed_Float(
 			self.lcd.font8x16, self.lcd.Color_Bg_Black,
-     		2, 1, 202, self.MBASE(row),
+     		2, 1, 216, self.MBASE(row),
      		self.pd.fw_unretract_speed
 		)
    
 	def Item_Prepare_fw_unretract_extra_length(self, row):
 		self.lcd.Draw_String(
-			False, False, self.lcd.font8x16, self.lcd.Color_White,
+			False, False, self.lcd.font8x16, self.lcd.Color_Yellow,
 			self.lcd.Color_Bg_Window, self.LBLX, self.MBASE(row),
-			"FW Extra length"
+			"Extra len"
 		)
 		self.Draw_Menu_Line(row, self.ICON_More)
 		self.lcd.Draw_Signed_Float(
 			self.lcd.font8x16, self.lcd.Color_Bg_Black,
-     		2, 1, 202, self.MBASE(row),
+     		2, 1, 216, self.MBASE(row),
      		self.pd.fw_unretract_extra_length
 		)
 
@@ -2723,12 +2734,23 @@ class DWIN_LCD:
 			self.HMI_Zoffset()
 		elif self.checkkey == self.BedTemp:
 			self.HMI_BedTemp()
-		elif self.checkkey == self.FanSpeed:	#sur on
+		elif self.checkkey == self.FanSpeed:
 			self.HMI_FanSpeed()
 		elif self.checkkey == self.PrintSpeed:
 			self.HMI_PrintSpeed()
-		elif self.checkkey == self.FlowSpeed:	#sur
+
+		elif self.checkkey == self.FlowSpeed:					#todo
 			self.HMI_FlowSpeed()
+
+		elif self.checkkey == self.Key_FW_retract_length:
+			self.HMI_fw_retract_length()
+		elif self.checkkey == self.Key_FW_retract_speed:
+			self.HMI_fw_retract_speed()
+		elif self.checkkey == self.Key_FW_unretract_speed:
+			self.HMI_fw_unretract_speed()
+		elif self.checkkey == self.Key_FW_unretract_extra_length:
+			self.HMI_fw_unretract_extra_length()
+
 		elif self.checkkey == self.MaxSpeed_value:
 			self.HMI_MaxFeedspeedXYZE()
 		elif self.checkkey == self.MaxAcceleration_value:

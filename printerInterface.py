@@ -239,10 +239,10 @@ class PrinterData:
 	temphot = 0
 	tempbed = 0
 
-	fw_retract_length = 25
+	fw_retract_length = 25.0
 	fw_retract_speed = 0.5
-	fw_unretract_speed = fw_retract_speed
-	fw_unretract_extra_length = 0
+	fw_unretract_speed = 25.0
+	fw_unretract_extra_length = 0.0
 
 	HMI_ValueStruct = HMI_value_t()
 	HMI_flag = HMI_Flag_t()
@@ -418,6 +418,7 @@ class PrinterData:
 		#print(fwr['retract_speed'])
 
 		self.fw_retract_length = fwr['retract_length']
+		print ('fwrl: ',self.fw_retract_length)
 		self.fw_retract_speed = fwr['retract_speed']
 		self.fw_unretract_speed = fwr['unretract_speed']
 		self.fw_unretract_extra_length = fwr['unretract_extra_length']
@@ -574,7 +575,9 @@ class PrinterData:
 
 	def set_fw_retract_length(self, fr):
 		self.fw_retract_length = fr
+		print('set FW retract length to: ', fr)
 		self.sendGCode('SET_RETRACTION RETRACT_LENGTH=%s' % fr)
+
 
 	def set_fw_retract_speed(self, fr):
 		self.fw_retract_speed = fr
