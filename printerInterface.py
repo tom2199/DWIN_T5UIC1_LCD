@@ -197,7 +197,7 @@ class PrinterData:
 	HAS_HEATED_BED = True
 	HAS_FAN = True
 	HAS_ZOFFSET_ITEM = True
-	HAS_ONESTEP_LEVELING = False
+	HAS_ONESTEP_LEVELING = False # Do not touch False sur
 	HAS_PREHEAT = True
 	HAS_BED_PROBE = True
 	PREVENT_COLD_EXTRUSION = True
@@ -418,7 +418,7 @@ class PrinterData:
 		#print(fwr['retract_speed'])
 
 		self.fw_retract_length = fwr['retract_length']
-		print ('fwrl: ',self.fw_retract_length)
+		#print ('fwrl: ',self.fw_retract_length)
 		self.fw_retract_speed = fwr['retract_speed']
 		self.fw_unretract_speed = fwr['unretract_speed']
 		self.fw_unretract_extra_length = fwr['unretract_extra_length']
@@ -575,7 +575,7 @@ class PrinterData:
 
 	def set_fw_retract_length(self, fr):
 		self.fw_retract_length = fr
-		print('set FW retract length to: ', fr)
+		#print('set FW retract length to: ', fr)
 		self.sendGCode('SET_RETRACTION RETRACT_LENGTH=%s' % fr)
 
 

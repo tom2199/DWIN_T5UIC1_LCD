@@ -3,6 +3,17 @@ import math
 import serial
 import struct
 
+def _MAX(lhs, rhs):
+	if lhs > rhs:
+		return lhs
+	else:
+		return rhs
+
+# def _MIN(lhs, rhs):
+# 	if lhs < rhs:
+# 		return lhs
+# 	else:
+# 		return rhs
 
 class T5UIC1_LCD:
 	address = 0x2A
