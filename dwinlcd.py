@@ -2219,12 +2219,10 @@ class DWIN_LCD:
 			self.lcd.Draw_Line(self.lcd.Line_Color, 16, self.MBASE(2) + i * 73, 256, 156 + i * 73)
 
 	def Draw_Tune_Menu(self):
-		#todo FW retract
 		self.Clear_Main_Window()
 		scroll = self.MROWS - self.index_control
 		self.Draw_Back_First(self.select_tune.now == 0) # <Back
 		self.lcd.Frame_TitleCopy(1, 94, 2, 126, 12)  # "Tune"
-		#self.lcd.Frame_AreaCopy(1, 94, 2, 126, 12, 14, 9) # "Tune"
     
 		if scroll + self.TUNE_CASE_SPEED <= self.MROWS:
 			self.Item_Prepare_Speed(self.TUNE_CASE_SPEED)

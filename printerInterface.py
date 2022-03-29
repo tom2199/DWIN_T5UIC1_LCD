@@ -413,15 +413,15 @@ class PrinterData:
 		#print(fwr)
 		#{'result': {'status': {'firmware_retraction': {'retract_length': 0.3, 'unretract_extra_length': 0.0, 'unretract_speed': 20.0, 'retract_speed': 20.0}}, 'eventtime': 2476.093258638}}
 
-		fwr = self.getREST('/printer/objects/query?firmware_retraction')['result']['status']['firmware_retraction']
-		#firmware_retraction = fwr['firmware_retraction']
-		#print(fwr['retract_speed'])
+		# fwr = self.getREST('/printer/objects/query?firmware_retraction')['result']['status']['firmware_retraction']
+		# #firmware_retraction = fwr['firmware_retraction']
+		# #print(fwr['retract_speed'])
 
-		self.fw_retract_length = fwr['retract_length']
-		#print ('fwrl: ',self.fw_retract_length)
-		self.fw_retract_speed = fwr['retract_speed']
-		self.fw_unretract_speed = fwr['unretract_speed']
-		self.fw_unretract_extra_length = fwr['unretract_extra_length']
+		# self.fw_retract_length = fwr['retract_length']
+		# #print ('fwrl: ',self.fw_retract_length)
+		# self.fw_retract_speed = fwr['retract_speed']
+		# self.fw_unretract_speed = fwr['unretract_speed']
+		# self.fw_unretract_extra_length = fwr['unretract_extra_length']
 
 
 	def GetFiles(self, refresh=False):
@@ -486,6 +486,13 @@ class PrinterData:
 			self.status = self.job_Info['print_stats']['state']
 			self.HMI_flag.print_finish = self.getPercent() == 100.0
 		
+		self.fwr = self.getREST('/printer/objects/query?firmware_retraction')['result']['status']['firmware_retraction']
+		if self.fwr:
+			self.fw_retract_length = self.fwr['retract_length']
+			self.fw_retract_speed = self.fwr['retract_speed']
+			self.fw_unretract_speed = self.fwr['unretract_speed']
+			self.fw_unretract_extra_length = self.fwr['unretract_extra_length']
+
 		self.xpos = self.current_position.x
 		self.ypos = self.current_position.y
 		self.zpos = self.current_position.z
