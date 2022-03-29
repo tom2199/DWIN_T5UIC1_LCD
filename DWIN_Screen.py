@@ -36,6 +36,23 @@ class T5UIC1_LCD:
 
 	# Color
 	Color_White = 0xFFFF
+	Color_Light_White = 0xBDD7
+	Color_Green = 0x07E0
+	Color_Light_Green = 0x3460
+	Color_Cyan = 0x07FF
+	Color_Light_Cyan = 0x04F3
+	Color_Blue = 0x015F
+	Color_Light_Blue = 0x3A6A
+	Color_Magenta = 0xF81F
+	Color_Light_Magenta = 0x9813
+	Color_Red = 0xF800
+	Color_Light_Red = 0x8800
+	Color_Orange = 0xFA20
+	Color_Light_Orange = 0xFBC0
+	Color_Light_Yellow = 0x8BE0
+	Color_Brown = 0xCC27
+	Color_Light_Brown = 0x6204
+	Color_Grey = 0x18E3
 	Color_Yellow = 0xFF0F
 	Color_Bg_Window = 0x31E8  # Popup background color
 	Color_Bg_Blue = 0x1125  # Dark blue background color
@@ -47,6 +64,38 @@ class T5UIC1_LCD:
 	Percent_Color = 0xFE29  # Percentage color
 	BarFill_Color = 0x10E4  # Fill color of progress bar
 	Select_Color = 0x33BB  # Selected color
+
+#define Color_White         0xFFFF
+#define Color_Light_White   0xBDD7
+#define Color_Green         0x07E0
+#define Color_Light_Green   0x3460
+#define Color_Cyan          0x07FF
+#define Color_Light_Cyan    0x04F3
+#define Color_Blue          0x015F
+#define Color_Light_Blue    0x3A6A
+#define Color_Magenta       0xF81F
+#define Color_Light_Magenta 0x9813
+#define Color_Red           0xF800
+#define Color_Light_Red     0x8800
+#define Color_Orange        0xFA20
+#define Color_Light_Orange  0xFBC0
+#define Color_Yellow        0xFF0F
+#define Color_Light_Yellow  0x8BE0
+#define Color_Brown         0xCC27
+#define Color_Light_Brown   0x6204
+#define Color_Black         0x0000
+#define Color_Grey          0x18E3
+#define Color_Bg_Window     0x31E8  // Popup background color
+#define Color_Bg_Blue       0x1125  // Dark blue background color
+#define Color_Bg_Black      0x0841  // Black background color
+#define Color_Bg_Red        0xF00F  // Red background color
+#define Popup_Text_Color    0xD6BA  // Popup font background color
+#define Line_Color          0x3A6A  // Split line color
+#define Rectangle_Color     0xEE2F  // Blue square cursor color
+#define Percent_Color       0xFE29  // Percentage color
+#define BarFill_Color       0x10E4  // Fill color of progress bar
+#define Select_Color        0x33BB  // Selected color
+#define Check_Color         0x4E5C  // Check-box check color
 
 	DWIN_FONT_MENU = font8x16
 	DWIN_FONT_STAT = font10x20
