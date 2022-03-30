@@ -8,6 +8,11 @@ from RPi import GPIO
 from printerInterface import PrinterData
 from DWIN_Screen import T5UIC1_LCD
 
+def _MAX(lhs, rhs):
+	if lhs > rhs:
+		return lhs
+	else:
+		return rhs
 
 def current_milli_time():
 	return round(time.time() * 1000)
