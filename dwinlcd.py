@@ -2097,9 +2097,10 @@ class DWIN_LCD:
 		self.lcd.Draw_Rectangle(1, self.lcd.Color_Bg_Window, 14, 60, 258, 330)
 
 	def Draw_Printing_Screen(self):
-		self.lcd.Frame_AreaCopy(1, 40, 2, 92, 14, 14, 9)  # Tune
-		self.lcd.Frame_AreaCopy(1, 0, 44, 96, 58, 41, 188)  # Pause
-		self.lcd.Frame_AreaCopy(1, 98, 44, 152, 58, 176, 188)  # Stop
+		self.lcd.Frame_AreaCopy(1, 40, 2, 92, 14, 14, 9)  # Printing
+		self.lcd.Frame_AreaCopy(1, 0, 44, 96, 58, 41, 188)  # Printing Time
+		#self.lcd.Frame_AreaCopy(1, 98, 44, 152, 58, 176, 188)  # Remain AreaCopy(1, 98, 44, 271 - 119, 479 - 420 - 1, 176, 188); // Stop
+		self.lcd.Frame_AreaCopy(1, 99, 44, 152, 57, 176, 188)  # Remain Sur
 
 	def Draw_Print_ProgressBar(self, Percentrecord=None):
 		if not Percentrecord:
@@ -2440,6 +2441,10 @@ class DWIN_LCD:
 		self.Draw_Print_ProgressElapsed()
 		self.Draw_Print_ProgressRemain()
 
+		#clear status area here
+		self.lcd.Draw_Rectangle(1, self.lcd.Color_Bg_Black, 0, self.STATUS_Y, self.lcd.DWIN_WIDTH, self.lcd.DWIN_HEIGHT - 1)
+		self.Draw_Status_Area(False)
+		
 	# --------------------------------------------------------------#
 	# --------------------------------------------------------------#
 
