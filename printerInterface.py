@@ -269,6 +269,8 @@ class PrinterData:
 	FW = "FW "
 	HOST = "Host "
 	SHUTDOWN = "Shutdown"
+ 
+	display_status = ""
 
 	def __init__(self, API_Key, URL='127.0.0.1'):
 		self.op = MoonrakerSocket(URL, 80, API_Key)
@@ -433,7 +435,7 @@ class PrinterData:
 		return names
 
 	def update_variable(self):
-		query = '/printer/objects/query?extruder&heater_bed&gcode_move&fan'
+		query = '/printer/objects/query?extruder&heater_bed&gcode_move&fan&display_status'
 		data = self.getREST(query)['result']['status']
 		gcm = data['gcode_move']
 		z_offset = gcm['homing_origin'][2] #z offset
@@ -445,6 +447,7 @@ class PrinterData:
 		bed = data['heater_bed'] #temperature, target
 		extruder = data['extruder'] #temperature, target
 		fan = data['fan']
+		d_status = data['display_status']['message']
 
 		Update = False #Sur xyz
 
@@ -477,9 +480,13 @@ class PrinterData:
 			if self.flowrate_percentage != flow_rate:
 				Update = True
 			if self.feedrate_percentage != print_speed:
-				Update = True							
+				Update = True
+			if self.display_status != str(d_status):
+				Update = True
+    
 		except:
 			pass #missing key, shouldn't happen, fixes misses on conditionals ¯\_(ツ)_/¯
+
 		self.job_Info = self.getREST('/printer/objects/query?virtual_sdcard&print_stats')['result']['status']
 		if self.job_Info:
 			self.file_name = self.job_Info['print_stats']['filename']
@@ -499,6 +506,8 @@ class PrinterData:
 
 		self.flowrate_percentage = flow_rate
 		self.feedrate_percentage = print_speed
+
+		self.display_status = str(d_status or '')
 
 		return Update
 
