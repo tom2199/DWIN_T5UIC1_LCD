@@ -1898,11 +1898,11 @@ class DWIN_LCD:
 
 		#display_status
 		self.lcd.Draw_String(
-			False, True, self.lcd.DWIN_FONT_STAT,
+			False, True, self.lcd.font8x16,
 			self.lcd.Color_White, self.lcd.Color_Bg_Black,
 			#(self.lcd.DWIN_WIDTH - len(self.pd.display_status) * self.STAT_CHR_W) / 2, 354,
 			0, 354,
-			self.pd.display_status.center(int(self.lcd.DWIN_WIDTH / self.STAT_CHR_W))
+			self.pd.display_status.center(int(self.lcd.DWIN_WIDTH / self.MENU_CHR_W))
 		)
 
 		############# 1-st line Sur
