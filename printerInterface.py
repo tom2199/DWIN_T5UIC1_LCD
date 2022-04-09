@@ -244,6 +244,8 @@ class PrinterData:
 	fw_unretract_speed = 25.0
 	fw_unretract_extra_length = 0.0
 
+	gcode_speed = 0.0
+
 	HMI_ValueStruct = HMI_value_t()
 	HMI_flag = HMI_Flag_t()
 
@@ -442,14 +444,14 @@ class PrinterData:
 		flow_rate = gcm['extrude_factor'] * 100 #flow rate percent
 		self.absolute_moves = gcm['absolute_coordinates'] #absolute or relative
 		self.absolute_extrude = gcm['absolute_extrude'] #absolute or relative
-		#speed = gcm['speed'] #current speed in mm/s
+		speed = gcm['speed'] #current speed in mm/m
 		print_speed = gcm['speed_factor'] * 100 #print speed percent
 		bed = data['heater_bed'] #temperature, target
 		extruder = data['extruder'] #temperature, target
 		fan = data['fan']
 		d_status = data['display_status']['message']
 
-		Update = False #Sur xyz
+		Update = False
 
 		try:
 			if self.thermalManager['temp_bed']['celsius'] != int(bed['temperature']):
@@ -483,7 +485,9 @@ class PrinterData:
 				Update = True
 			if self.display_status != str(d_status):
 				Update = True
-    
+			if self.gcode_speed != speed:
+				Update = True
+
 		except:
 			pass #missing key, shouldn't happen, fixes misses on conditionals ¯\_(ツ)_/¯
 
@@ -508,6 +512,8 @@ class PrinterData:
 		self.feedrate_percentage = print_speed
 
 		self.display_status = str(d_status or '')
+
+		self.gcode_speed = speed
 
 		return Update
 

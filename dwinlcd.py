@@ -251,7 +251,7 @@ class DWIN_LCD:
 	ICON_Info_1 = 91
 
 	MENU_CHAR_LIMIT = 24
-	STATUS_Y = 360
+	STATUS_Y = 357 #was 360, change for display_info Y
 
 	MOTION_CASE_RATE = 1
 	MOTION_CASE_ACCEL = 2
@@ -1901,7 +1901,7 @@ class DWIN_LCD:
 			False, True, self.lcd.font8x16,
 			self.lcd.Color_White, self.lcd.Color_Bg_Black,
 			#(self.lcd.DWIN_WIDTH - len(self.pd.display_status) * self.STAT_CHR_W) / 2, 354,
-			0, 354,
+			0, 358,
 			self.pd.display_status.center(int(self.lcd.DWIN_WIDTH / self.MENU_CHR_W))
 		)
 
@@ -1992,13 +1992,26 @@ class DWIN_LCD:
 		)
 
 		#z-offset
-		if self.pd.HAS_ZOFFSET_ITEM:
-			self.lcd.ICON_Show(self.ICON, self.ICON_Zoffset, 192, 410)
-			self.lcd.Draw_Signed_Float(
-				self.lcd.DWIN_FONT_STAT,
-				self.lcd.Color_Bg_Black, 2, 2, 212, 410, 
-				self.pd.BABY_Z_VAR * 100
-			)
+		# if self.pd.HAS_ZOFFSET_ITEM:
+		# 	self.lcd.ICON_Show(self.ICON, self.ICON_Zoffset, 192, 410)
+		# 	self.lcd.Draw_Signed_Float(
+		# 		self.lcd.DWIN_FONT_STAT,
+		# 		self.lcd.Color_Bg_Black, 2, 2, 212, 410, 
+		# 		self.pd.BABY_Z_VAR * 100
+		# 	)
+
+		#or gcode speed /60 for mm/s
+		self.lcd.ICON_Show(self.ICON, self.ICON_Motion, 192, 410)
+		self.lcd.Draw_Signed_Float(
+			self.lcd.DWIN_FONT_STAT, 
+			self.lcd.Color_Bg_Black, 3, 1, 195 + 2 * self.STAT_CHR_W, 410,
+			self.pd.gcode_speed / 60 * 10 
+		)
+		# self.lcd.Draw_String(
+		# 	False, False, self.lcd.DWIN_FONT_STAT,
+		# 	self.lcd.Color_White, self.lcd.Color_Bg_Black, 202 + 5 * self.STAT_CHR_W + 2, 410,
+		# 	"mm/s"
+		# )
 
 		################ 3-d line
 
@@ -2421,7 +2434,7 @@ class DWIN_LCD:
 			self.ICON_StartTune(self.select_page.now == 3)
 			#self.ICON_StartInfo(self.select_page.now == 3)
 
-		#clear status area here
+		#clear status area here, Sur
 		self.lcd.Draw_Rectangle(1, self.lcd.Color_Bg_Black, 0, self.STATUS_Y, self.lcd.DWIN_WIDTH, self.lcd.DWIN_HEIGHT - 1)
 		self.Draw_Status_Area(False)
 		
@@ -2450,7 +2463,7 @@ class DWIN_LCD:
 		self.Draw_Print_ProgressElapsed()
 		self.Draw_Print_ProgressRemain()
 
-		#clear status area here
+		#clear status area here, Sur
 		self.lcd.Draw_Rectangle(1, self.lcd.Color_Bg_Black, 0, self.STATUS_Y, self.lcd.DWIN_WIDTH, self.lcd.DWIN_HEIGHT - 1)
 		self.Draw_Status_Area(False)
 		
@@ -2641,7 +2654,7 @@ class DWIN_LCD:
 	def ICON_StartTune(self, show):
 		if show:
 			self.lcd.ICON_Show(self.ICON, self.ICON_Setup_1, 145, 246)
-			self.lcd.Draw_Rectangle(0, self.lcd.Color_White, 145, 246, 254, 345)
+			self.lcd.Draw_Rectangle(0, self.lcd.Color_White, 145, 246, 224, 345)	#254, 345)
 			self.lcd.Frame_AreaCopy(1, 0, 466, 34, 476, 182, 318)
 		else:
 			self.lcd.ICON_Show(self.ICON, self.ICON_Setup_0, 145, 246)
