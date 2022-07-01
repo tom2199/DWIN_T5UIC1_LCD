@@ -30,7 +30,7 @@ class T5UIC1_LCD:
 	DWIN_WIDTH = 272
 	DWIN_HEIGHT = 480
 
-	# 3-.0：The font size, 0x00-0x09, corresponds to the font size below:
+	# The font size, 0x00-0x09, corresponds to the font size below:
 	# 0x00=6*12   0x01=8*16   0x02=10*20  0x03=12*24  0x04=14*28
 	# 0x05=16*32  0x06=20*40  0x07=24*48  0x08=28*56  0x09=32*64
 
@@ -76,6 +76,10 @@ class T5UIC1_LCD:
 	BarFill_Color = 0x10E4  # Fill color of progress bar
 	Select_Color = 0x33BB  # Selected color
 
+	Color_BG = Color_Bg_Black
+	Color_FG = Color_White
+	Color_BGTitle = Color_Bg_Blue
+ 
 #define Color_White         0xFFFF
 #define Color_Light_White   0xBDD7
 #define Color_Green         0x07E0
@@ -192,7 +196,7 @@ class T5UIC1_LCD:
 		self.Send()
 
 	# Set screen display direction
-	#  dir: 0=0°, 1=90°, 2=180°, 3=270°
+	#  dir: 0=0В°, 1=90В°, 2=180В°, 3=270В°
 	def Frame_SetDir(self, dir):
 		self.Byte(0x34)
 		self.Byte(0x5A)

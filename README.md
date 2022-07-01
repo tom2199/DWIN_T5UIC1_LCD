@@ -31,12 +31,9 @@ https://github.com/arksine/moonraker
     dtoverlay=disable-bt
 
 ### [Enabling Klipper's API socket](https://www.klipper3d.org/API_Server.html)
-  By default, the Klipper's API socket is not enabled. In order to use the API server, the file /etc/default/klipper need to be updated form
+  Check your /etc/systemd/system/klipper.service file for API enable parameter `-a /tmp/klippy_uds`:
 
-    KLIPPY_ARGS="/home/pi/klipper/klippy/klippy.py /home/pi/printer.cfg -l /tmp/klippy.log"
-To:
-
-    KLIPPY_ARGS="/home/pi/klipper/klippy/klippy.py /home/pi/printer.cfg -a /tmp/klippy_uds -l /tmp/klippy.log"
+  `ExecStart=/home/pi/klippy-env/bin/python /home/pi/klipper/klippy/klippy.py /home/pi/klipper_config/printer.cfg -l /home/pi/klipper_logs/klippy.log -a /tmp/klippy_uds`
 
 ### Library requirements 
 
@@ -51,13 +48,16 @@ To:
 
 ### Wire the display 
   * Display <-> Raspberry Pi GPIO BCM
-  * Rx  =   GPIO14  (Tx)
-  * Tx  =   GPIO15  (Rx)
-  * Ent =   GPIO13
-  * A   =   GPIO19
-  * B   =   GPIO26
-  * Vcc =   2   (5v)
-  * Gnd =   6   (GND)
+  * 1  - Nc
+  * 2  - Nc
+  * 3  - Rx   = 8  - GPIO14  (Tx)
+  * 4  - Tx   = 10 - GPIO15  (Rx)
+  * 5  - Ent  = 33 - GPIO13
+  * 6  - BEEP = 31 - GPIO6 (Optional)
+  * 7  - A    = 35 - GPIO19
+  * 8  - B    = 37 - GPIO26
+  * 9  - Vcc  = 4  - (5v)
+  * 10 - Gnd  = 6  - (GND)
 
 Here's a diagram based on my color selection:
 
@@ -138,29 +138,6 @@ Run with `python3 ./run.py`
    
 
 # Status:
-
-## Working:
-
- Print Menu:
- 
-    * List / Print jobs from OctoPrint / Moonraker
-    * Auto swiching from to Print Menu on job start / end.
-    * Display Print time, Progress, Temps, and Job name.
-    * Pause / Resume / Cancle Job
-    * Tune Menu: Print speed & Temps
-
- Perpare Menu:
- 
-    * Move / Jog toolhead
-    * Disable stepper
-    * Auto Home
-    * Z offset (PROBE_CALIBRATE)
-    * Preheat
-    * cooldown
- 
- Info Menu
- 
-    * Shows printer info.
 
 ## Notworking:
     * Save / Loding Preheat setting, hardcode on start can be changed in menu but will not retane on restart.

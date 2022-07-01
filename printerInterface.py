@@ -266,12 +266,32 @@ class PrinterData:
 	SHORT_BUILD_VERSION = "1.00"
 	CORP_WEBSITE_E = "https://www.klipper3d.org/"
  
-	RESTART = "Restart"
-	KLIPPER = "Klipper "
-	FW = "FW "
-	HOST = "Host "
-	SHUTDOWN = "Shutdown"
- 
+	######### str
+	s_RESTART = "Restart"
+	s_KLIPPER = "Klipper "
+	s_FW = "FW "
+	s_HOST = "Host "
+	s_SHUTDOWN = "Shutdown"
+	s_SETTINGS = "Settings"
+	s_HOME = "Home" 
+	s_HOT = "Hot "		
+	s_BED = "Bed "
+	s_PRINT_FILE = "Print file"
+	s_PREPARE = "Prepare"
+	s_CONTROL = "Control"
+	s_INFO = "Info"
+	s_TUNE = "Tune"
+	s_TEMPERATURE = "Temperature"
+	s_MOTION = "Motion"
+	s_MOVE = "Move"
+	s_BACK = "Back"
+	s_TIME = "Time"
+	s_PRINTING = "Printing "
+	s_REMAIN = "Remain"
+	s_PREHEAT = "Preheat"
+	s_COOLDOWN = "Cooldown"
+	s_PRINT = "Print"
+
 	display_status = ""
 
 	def __init__(self, API_Key, URL='127.0.0.1'):
@@ -489,7 +509,7 @@ class PrinterData:
 				Update = True
 
 		except:
-			pass #missing key, shouldn't happen, fixes misses on conditionals ¯\_(ツ)_/¯
+			pass #missing key, shouldn't happen, fixes misses on conditionals ВЇ\_(гѓ„)_/ВЇ
 
 		self.job_Info = self.getREST('/printer/objects/query?virtual_sdcard&print_stats')['result']['status']
 		if self.job_Info:

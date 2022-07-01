@@ -1,9 +1,11 @@
 import time
-import multitimer
+#import multitimer #mkocot
+import threading #mkocot
 import atexit
 
 from encoder import Encoder
-from RPi import GPIO
+#from RPi import GPIO	#mkocot
+from gpiozero import Button	#mkocot
 
 from printerInterface import PrinterData
 from DWIN_Screen import T5UIC1_LCD
@@ -16,6 +18,14 @@ def _MAX(lhs, rhs):
 
 def current_milli_time():
 	return round(time.time() * 1000)
+
+class RepeatableTimer(threading.Timer):	#mkocot
+	def run(self):
+		while not self.finished.wait(self.interval):
+			self.function(*self.args, **self.kwargs)
+
+	def stop(self):
+		self.cancel()
 
 class select_t:
 	now = 0
@@ -308,11 +318,13 @@ class DWIN_LCD:
 	# Passing parameters: serial port number
 	# DWIN screen uses serial port 1 to send
 	def __init__(self, USARTx, encoder_pins, button_pin, octoPrint_API_Key):
-		GPIO.setmode(GPIO.BCM)
+		#GPIO.setmode(GPIO.BCM)	#mkocot
 		self.encoder = Encoder(encoder_pins[0], encoder_pins[1])
 		self.button_pin = button_pin
-		GPIO.setup(self.button_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-		GPIO.add_event_detect(self.button_pin, GPIO.BOTH, callback=self.encoder_has_data)
+		#GPIO.setup(self.button_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)	#mkocot
+		#GPIO.add_event_detect(self.button_pin, GPIO.BOTH, callback=self.encoder_has_data)	#mkocot
+		self.button = Button(button_pin)	#mkocot
+		self.button.when_pressed = self.encoder_has_data	#mkocot
 		self.encoder.callback = self.encoder_has_data
 		self.EncodeLast = 0
 		self.EncodeMS = current_milli_time() + self.ENCODER_WAIT
@@ -323,7 +335,8 @@ class DWIN_LCD:
 		self.lcd.Backlight_SetLuminance(0x14) #Sur 20
 		self.checkkey = self.MainMenu
 		self.pd = PrinterData(octoPrint_API_Key)
-		self.timer = multitimer.MultiTimer(interval=1, function=self.EachMomentUpdate) #sur interval 1(2)
+		self.timer = RepeatableTimer(		#mkocot
+			interval=1, function=self.EachMomentUpdate) #sur interval 1(2)
 		self.HMI_ShowBoot()
 		#self.HMI_AudioFeedback(True) #Sur?
 		print("Boot looks good")
@@ -342,7 +355,8 @@ class DWIN_LCD:
 		self.lcd.Frame_SetDir(1)
 		self.lcd.UpdateLCD()
 		self.timer.stop()
-		GPIO.remove_event_detect(self.button_pin)
+		#GPIO.remove_event_detect(self.button_pin)	#mkocot
+		self.button.close()	#mkocot
 
 	def MBASE(self, L):
 		return 49 + self.MLINE * L
@@ -379,7 +393,7 @@ class DWIN_LCD:
 		if self.pd.status == 'printing':
 			self.Goto_PrintProcess()
 		elif self.pd.status in ['operational', 'complete', 'standby', 'cancelled']:
-      
+	  
 			self.Goto_MainMenu()
 
 			#self.checkkey = self.TemperatureID	#test other pages outdoor /sur
@@ -846,7 +860,7 @@ class DWIN_LCD:
 						self.Item_Prepare_Flow(0)
 					elif (self.index_tune == self.MROWS + self.TUNE_CASE_FAN):
 						self.Item_Prepare_Fan(0)
-      
+	  
 				else:
 					self.Move_Highlight(-1, self.select_tune.now + self.MROWS - self.index_tune)
 
@@ -1944,18 +1958,27 @@ class DWIN_LCD:
 			"%"
 		)
 
-		#fan speed %
-		self.lcd.ICON_Show(self.ICON, self.ICON_FanSpeed, 192, 382)
-		self.lcd.Draw_IntValue(
-			True, True, 0, self.lcd.DWIN_FONT_STAT,
-			self.lcd.Color_White, self.lcd.Color_Bg_Black, 3, 202 + 2 * self.STAT_CHR_W, 382,
-			self.pd.thermalManager['fan_speed'][0]
+		#z-offset
+		# if self.pd.HAS_ZOFFSET_ITEM:
+		# 	self.lcd.ICON_Show(self.ICON, self.ICON_Zoffset, 192, 410)
+		# 	self.lcd.Draw_Signed_Float(
+		# 		self.lcd.DWIN_FONT_STAT,
+		# 		self.lcd.Color_Bg_Black, 2, 2, 212, 410, 
+		# 		self.pd.BABY_Z_VAR * 100
+		# 	)
+
+		#or gcode speed /60 for mm/s
+		self.lcd.ICON_Show(self.ICON, self.ICON_Motion, 192, 382)
+		self.lcd.Draw_Signed_Float(
+			self.lcd.DWIN_FONT_STAT, 
+			self.lcd.Color_Bg_Black, 3, 1, 195 + 2 * self.STAT_CHR_W, 382,
+			self.pd.gcode_speed / 60 * 10 
 		)
-		self.lcd.Draw_String(
-			False, False, self.lcd.DWIN_FONT_STAT,
-			self.lcd.Color_White, self.lcd.Color_Bg_Black, 202 + 5 * self.STAT_CHR_W + 2, 382,
-			"%"
-		)
+		# self.lcd.Draw_String(
+		# 	False, False, self.lcd.DWIN_FONT_STAT,
+		# 	self.lcd.Color_White, self.lcd.Color_Bg_Black, 202 + 5 * self.STAT_CHR_W + 2, 410,
+		# 	"mm/s"
+		# )
 
 		############# 2-nd line
 
@@ -1991,27 +2014,18 @@ class DWIN_LCD:
 			"%"
 		)
 
-		#z-offset
-		# if self.pd.HAS_ZOFFSET_ITEM:
-		# 	self.lcd.ICON_Show(self.ICON, self.ICON_Zoffset, 192, 410)
-		# 	self.lcd.Draw_Signed_Float(
-		# 		self.lcd.DWIN_FONT_STAT,
-		# 		self.lcd.Color_Bg_Black, 2, 2, 212, 410, 
-		# 		self.pd.BABY_Z_VAR * 100
-		# 	)
-
-		#or gcode speed /60 for mm/s
-		self.lcd.ICON_Show(self.ICON, self.ICON_Motion, 192, 410)
-		self.lcd.Draw_Signed_Float(
-			self.lcd.DWIN_FONT_STAT, 
-			self.lcd.Color_Bg_Black, 3, 1, 195 + 2 * self.STAT_CHR_W, 410,
-			self.pd.gcode_speed / 60 * 10 
+		#fan speed %
+		self.lcd.ICON_Show(self.ICON, self.ICON_FanSpeed, 192, 410)
+		self.lcd.Draw_IntValue(
+			True, True, 0, self.lcd.DWIN_FONT_STAT,
+			self.lcd.Color_White, self.lcd.Color_Bg_Black, 3, 197 + 2 * self.STAT_CHR_W, 410,
+			self.pd.thermalManager['fan_speed'][0]
 		)
-		# self.lcd.Draw_String(
-		# 	False, False, self.lcd.DWIN_FONT_STAT,
-		# 	self.lcd.Color_White, self.lcd.Color_Bg_Black, 202 + 5 * self.STAT_CHR_W + 2, 410,
-		# 	"mm/s"
-		# )
+		self.lcd.Draw_String(
+			False, False, self.lcd.DWIN_FONT_STAT,
+			self.lcd.Color_White, self.lcd.Color_Bg_Black, 202 + 5 * self.STAT_CHR_W + 2, 410,
+			"%"
+		)
 
 		################ 3-d line
 
@@ -2034,7 +2048,7 @@ class DWIN_LCD:
 		)
 
 		#current Z
-		self.lcd.ICON_Show(self.ICON, self.ICON_MaxSpeedZ, 181, 446)
+		self.lcd.ICON_Show(self.ICON, self.ICON_MaxSpeedZ, 179, 446) #181
 		self.lcd.Draw_Signed_Float(
 			self.lcd.DWIN_FONT_STAT, 
 			self.lcd.Color_Bg_Black, 3, 2, 183 + 2 * self.STAT_CHR_W, 446,
@@ -2069,8 +2083,13 @@ class DWIN_LCD:
 
 	# The "Back" label is always on the first line
 	def Draw_Back_Label(self):
-		self.lcd.Frame_AreaCopy(1, 226, 179, 256, 189, self.LBLX, self.MBASE(0))
-
+		#self.lcd.Frame_AreaCopy(1, 226, 179, 256, 189, self.LBLX, self.MBASE(0))
+		self.lcd.Draw_String(
+			False, True, self.lcd.font8x16, self.lcd.Color_FG, self.lcd.Color_BG,
+			self.LBLX, self.MBASE(0),
+			self.pd.s_BACK
+		)
+   
 	# Draw "Back" line at the top
 	def Draw_Back_First(self, is_sel=True):
 		self.Draw_Menu_Line(0, self.ICON_Back)
@@ -2095,7 +2114,7 @@ class DWIN_LCD:
 		self.lcd.Frame_AreaCopy(1, 64, 119, 106, 129, self.LBLX + 27, line)  # "Jerk"
 
 	def draw_steps_per_mm(self, line):
-		self.lcd.Frame_AreaCopy(1, 1, 151, 101, 161, self.LBLX, line)  # "Steps-per-mm"
+		self.lcd.Frame_AreaCopy(1, 1, 151, 119, 161, self.LBLX, line)  # "Steps-per-mm" 101 -> 119
 
 	# Display an SD item
 	def Draw_SDItem(self, item, row=0):
@@ -2119,11 +2138,14 @@ class DWIN_LCD:
 		self.lcd.Draw_Rectangle(1, self.lcd.Color_Bg_Window, 14, 60, 258, 330)
 
 	def Draw_Printing_Screen(self):
-		self.lcd.Frame_AreaCopy(1, 40, 2, 92, 14, 14, 9)  # Printing
-		self.lcd.Frame_AreaCopy(1, 0, 44, 96, 58, 41, 188)  # Printing Time
+		#self.lcd.Frame_AreaCopy(1, 40, 2, 92, 14, 14, 9)  # Printing
+		self.lcd.Draw_String(False, True, self.lcd.font8x16, self.lcd.Color_FG, self.lcd.Color_BG, 14, 8, self.pd.s_PRINTING)
+		#self.lcd.Frame_AreaCopy(1, 0, 44, 96, 58, 41, 188)  # Printing Time
+		self.lcd.Draw_String(False, True, self.lcd.font8x16, self.lcd.Color_FG, self.lcd.Color_BG, 41, 188, self.pd.s_PRINTING + self.pd.s_TIME)
 		#self.lcd.Frame_AreaCopy(1, 98, 44, 152, 58, 176, 188)  # Remain AreaCopy(1, 98, 44, 271 - 119, 479 - 420 - 1, 176, 188); // Stop
-		self.lcd.Frame_AreaCopy(1, 99, 44, 152, 57, 176, 188)  # Remain Sur
-
+		#self.lcd.Frame_AreaCopy(1, 99, 44, 152, 57, 176, 188)  # Remain Sur
+		self.lcd.Draw_String(False, True, self.lcd.font8x16, self.lcd.Color_FG, self.lcd.Color_BG, 176, 188, self.pd.s_REMAIN)
+  
 	def Draw_Print_ProgressBar(self, Percentrecord=None):
 		if not Percentrecord:
 			Percentrecord = self.pd.getPercent()
@@ -2147,13 +2169,15 @@ class DWIN_LCD:
 
 	def Draw_Print_File_Menu(self):
 		self.Clear_Title_Bar()
-		self.lcd.Frame_TitleCopy(1, 52, 31, 137, 41)  # "Print file"
+		#self.lcd.Frame_TitleCopy(1, 52, 31, 137, 41)  # "Print file"
+		self.lcd.Draw_String(False, False, self.lcd.font10x20, self.lcd.Color_FG, self.lcd.Color_BGTitle, 14, 8, self.pd.s_PRINT_FILE)
 		self.Redraw_SD_List()
 
 	def Draw_Prepare_Menu(self):
 		self.Clear_Main_Window()
 		scroll = self.MROWS - self.index_prepare
-		self.lcd.Frame_TitleCopy(1, 178, 2, 229, 14)  # "Prepare"
+		#self.lcd.Frame_TitleCopy(1, 178, 2, 229, 14)  # "Prepare"
+		self.lcd.Draw_String(False, False, self.lcd.font10x20, self.lcd.Color_FG, self.lcd.Color_BGTitle, 14, 8, self.pd.s_PREPARE)
 		self.Draw_Back_First(self.select_prepare.now == 0)  # < Back
 		if scroll + self.PREPARE_CASE_MOVE <= self.MROWS:
 			self.Item_Prepare_Move(self.PREPARE_CASE_MOVE)  # Move >
@@ -2176,7 +2200,8 @@ class DWIN_LCD:
 		self.Clear_Main_Window()
 		scroll = self.MROWS - self.index_control
 		self.Draw_Back_First(self.select_control.now == 0)  # < Back
-		self.lcd.Frame_TitleCopy(1, 128, 2, 176, 12)  # "Control"
+		#self.lcd.Frame_TitleCopy(1, 128, 2, 176, 12)  # "Control"
+		self.lcd.Draw_String(False, False, self.lcd.font10x20, self.lcd.Color_FG, self.lcd.Color_BGTitle, 14, 8, self.pd.s_CONTROL)
   
 		if scroll + self.CONTROL_CASE_TEMP <= self.MROWS:
 			self.lcd.Frame_AreaCopy(1, 1, 89, 83, 101, self.LBLX, self.MBASE(self.CONTROL_CASE_TEMP))  # Temperature >
@@ -2192,7 +2217,7 @@ class DWIN_LCD:
 			self.lcd.Draw_String(
 				False, False, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
 				self.LBLX, self.MBASE(self.CONTROL_CASE_KLIPPER_RESTART),
-				self.pd.KLIPPER + self.pd.RESTART
+				self.pd.s_KLIPPER + self.pd.s_RESTART
 			)
 			self.Draw_Menu_Line(self.CONTROL_CASE_KLIPPER_RESTART, self.ICON_Contact)
 			#self.Draw_More_Icon(self.CONTROL_CASE_KLIPPER_RESTART) # >
@@ -2200,7 +2225,7 @@ class DWIN_LCD:
 			self.lcd.Draw_String(
 				False, False, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
 				self.LBLX, self.MBASE(self.CONTROL_CASE_FW_RESTART),
-				self.pd.FW + self.pd.RESTART
+				self.pd.s_FW + self.pd.s_RESTART
 			)
 			self.Draw_Menu_Line(self.CONTROL_CASE_FW_RESTART, self.ICON_Contact)
 			#self.Draw_More_Icon(self.CONTROL_CASE_FW_RESTART)
@@ -2208,13 +2233,13 @@ class DWIN_LCD:
 			self.lcd.Draw_String(
 				False, False, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
 				self.LBLX, self.MBASE(self.CONTROL_CASE_HOST_RESTART),
-				self.pd.HOST + self.pd.RESTART
+				self.pd.s_HOST + self.pd.s_RESTART
 			)
 			self.Draw_Menu_Line(self.CONTROL_CASE_HOST_RESTART, self.ICON_Contact)
 			#self.Draw_More_Icon(self.CONTROL_CASE_HOST_RESTART)
 		if scroll + self.CONTROL_CASE_HOST_SHUTDOWN <= self.MROWS:
 			self.Item_Prepare_host_shutdown(self.CONTROL_CASE_HOST_SHUTDOWN)
-     
+	 
 		if self.select_control.now: # and self.select_control.now < self.MROWS:
 			self.Draw_Menu_Cursor(self.select_control.now)
 
@@ -2250,8 +2275,9 @@ class DWIN_LCD:
 		self.Clear_Main_Window()
 		scroll = self.MROWS - self.index_control
 		self.Draw_Back_First(self.select_tune.now == 0) # <Back
-		self.lcd.Frame_TitleCopy(1, 94, 2, 126, 12)  # "Tune"
-    
+		#self.lcd.Frame_TitleCopy(1, 94, 2, 126, 12)  # "Tune"
+		self.lcd.Draw_String(False, False, self.lcd.font10x20, self.lcd.Color_FG, self.lcd.Color_BGTitle, 14, 8, self.pd.s_TUNE)
+  
 		if scroll + self.TUNE_CASE_SPEED <= self.MROWS:
 			self.Item_Prepare_Speed(self.TUNE_CASE_SPEED)
    
@@ -2266,8 +2292,8 @@ class DWIN_LCD:
 			self.Draw_Menu_Line(self.TUNE_CASE_ZOFF, self.ICON_Zoffset)
 			self.lcd.Draw_Signed_Float(
 		 		self.lcd.font8x16, self.lcd.Color_Bg_Black,
-     			2, 2, 202, self.MBASE(self.TUNE_CASE_ZOFF),
-     			self.pd.BABY_Z_VAR * 100
+	 			2, 2, 202, self.MBASE(self.TUNE_CASE_ZOFF),
+	 			self.pd.BABY_Z_VAR * 100
 		 	)
 
 		if scroll + self.TUNE_CASE_RETRACT_L <= self.MROWS:
@@ -2299,16 +2325,18 @@ class DWIN_LCD:
 		# 	self.lcd.Draw_IntValue(
 		# 		True, True, 0, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
 		# 		3, 216, self.MBASE(self.TUNE_CASE_BED),
-    	# 		self.pd.thermalManager['temp_bed']['target']
+		# 		self.pd.thermalManager['temp_bed']['target']
 		# 	)
   
 
 		if (self.select_tune.now):	# and self.select_tune.now < self.MROWS:
 			self.Draw_Menu_Cursor(self.select_tune.now)
-       
+	   
 	def Draw_Temperature_Menu(self):
 		self.Clear_Main_Window()
-		self.lcd.Frame_TitleCopy(1, 56, 16, 141, 28)  # "Temperature"
+		#self.lcd.Frame_TitleCopy(1, 56, 16, 141, 28)  # "Temperature"
+		self.lcd.Draw_String(False, False, self.lcd.font10x20, self.lcd.Color_FG, self.lcd.Color_BGTitle, 14, 8, self.pd.s_TEMPERATURE)
+  
 		if self.pd.HAS_HOTEND:
 			self.lcd.Frame_AreaCopy(1, 197, 104, 238, 114, self.LBLX, self.MBASE(self.TEMP_CASE_TEMP))  # Nozzle...
 			self.lcd.Frame_AreaCopy(1, 1, 89, 83, 101, self.LBLX + 44, self.MBASE(self.TEMP_CASE_TEMP))  # ...Temperature
@@ -2371,7 +2399,9 @@ class DWIN_LCD:
 
 	def Draw_Motion_Menu(self):
 		self.Clear_Main_Window()
-		self.lcd.Frame_TitleCopy(1, 144, 16, 189, 26)  # "Motion"
+		#self.lcd.Frame_TitleCopy(1, 144, 16, 189, 26)  # "Motion"
+		self.lcd.Draw_String(False, False, self.lcd.font10x20, self.lcd.Color_FG, self.lcd.Color_BGTitle, 14, 8, self.pd.s_MOTION)
+  
 		self.draw_max_en(self.MBASE(self.MOTION_CASE_RATE))
 		self.draw_speed_en(27, self.MBASE(self.MOTION_CASE_RATE))  # "Max Speed"
 		self.draw_max_accel_en(self.MBASE(self.MOTION_CASE_ACCEL))  # "Max Acceleration"
@@ -2396,7 +2426,9 @@ class DWIN_LCD:
 
 	def Draw_Move_Menu(self):
 		self.Clear_Main_Window()
-		self.lcd.Frame_TitleCopy(1, 231, 2, 265, 12)  # "Move"
+		#self.lcd.Frame_TitleCopy(1, 231, 2, 265, 12)  # "Move"
+		self.lcd.Draw_String(False, False, self.lcd.font10x20, self.lcd.Color_FG, self.lcd.Color_BGTitle, 14, 8, self.pd.s_MOVE)
+  
 		self.draw_move_en(self.MBASE(1))
 		self.say_x(36, self.MBASE(1))  # "Move X"
 		self.draw_move_en(self.MBASE(2))
@@ -2421,7 +2453,8 @@ class DWIN_LCD:
 		self.checkkey = self.MainMenu
 		self.Clear_Main_Window()
 
-		self.lcd.Frame_AreaCopy(1, 0, 2, 39, 12, 14, 9)
+		#self.lcd.Frame_AreaCopy(1, 0, 2, 39, 12, 14, 9)	#Home
+		self.lcd.Draw_String(False, True, self.lcd.font8x16, self.lcd.Color_FG, self.lcd.Color_BGTitle, 14, 8, self.pd.s_HOME)
 		self.lcd.ICON_Show(self.ICON, self.ICON_LOGO, 71, 52)
 
 		self.ICON_Print()
@@ -2601,28 +2634,31 @@ class DWIN_LCD:
 		if self.select_page.now == 0:
 			self.lcd.ICON_Show(self.ICON, self.ICON_Print_1, 17, 130)
 			self.lcd.Draw_Rectangle(0, self.lcd.Color_White, 17, 130, 126, 229)
-			self.lcd.Frame_AreaCopy(1, 1, 451, 31, 463, 57, 201)
+			#self.lcd.Frame_AreaCopy(1, 1, 451, 31, 463, 57, 201)
 		else:
 			self.lcd.ICON_Show(self.ICON, self.ICON_Print_0, 17, 130)
-			self.lcd.Frame_AreaCopy(1, 1, 423, 31, 435, 57, 201)
+			#self.lcd.Frame_AreaCopy(1, 1, 423, 31, 435, 57, 201)
+		self.lcd.Draw_String(False, False, self.lcd.font8x16, self.lcd.Color_FG, self.lcd.Color_BGTitle, 52, 201, self.pd.s_PRINT)
 
 	def ICON_Prepare(self):
 		if self.select_page.now == 1:
 			self.lcd.ICON_Show(self.ICON, self.ICON_Prepare_1, 145, 130)
 			self.lcd.Draw_Rectangle(0, self.lcd.Color_White, 145, 130, 254, 229)
-			self.lcd.Frame_AreaCopy(1, 33, 451, 82, 466, 175, 201)
+			#self.lcd.Frame_AreaCopy(1, 33, 451, 82, 466, 175, 201)
 		else:
 			self.lcd.ICON_Show(self.ICON, self.ICON_Prepare_0, 145, 130)
-			self.lcd.Frame_AreaCopy(1, 33, 423, 82, 438, 175, 201)
+			#self.lcd.Frame_AreaCopy(1, 33, 423, 82, 438, 175, 201)
+		self.lcd.Draw_String(False, False, self.lcd.font8x16, self.lcd.Color_FG, self.lcd.Color_BGTitle, 170, 201, self.pd.s_PREPARE)
 
 	def ICON_Control(self):
 		if self.select_page.now == 2:
 			self.lcd.ICON_Show(self.ICON, self.ICON_Control_1, 17, 246)
 			self.lcd.Draw_Rectangle(0, self.lcd.Color_White, 17, 246, 126, 345)
-			self.lcd.Frame_AreaCopy(1, 85, 451, 132, 463, 48, 318)
+			#self.lcd.Frame_AreaCopy(1, 85, 451, 132, 463, 48, 318)
 		else:
 			self.lcd.ICON_Show(self.ICON, self.ICON_Control_0, 17, 246)
-			self.lcd.Frame_AreaCopy(1, 85, 423, 132, 434, 48, 318)
+			#self.lcd.Frame_AreaCopy(1, 85, 423, 132, 434, 48, 318)
+		self.lcd.Draw_String(False, False, self.lcd.font8x16, self.lcd.Color_FG, self.lcd.Color_BGTitle, 45, 318, self.pd.s_CONTROL)
 
 	def ICON_Leveling(self, show):
 		if show:
@@ -2646,10 +2682,11 @@ class DWIN_LCD:
 		if (self.select_print.now == 0):
 			self.lcd.ICON_Show(self.ICON, self.ICON_Setup_1, 8, 252)
 			self.lcd.Draw_Rectangle(0, self.lcd.Color_White, 8, 252, 87, 351)
-			self.lcd.Frame_AreaCopy(1, 0, 466, 34, 476, 31, 325)
+			#self.lcd.Frame_AreaCopy(1, 0, 466, 34, 476, 31, 325)
 		else:
 			self.lcd.ICON_Show(self.ICON, self.ICON_Setup_0, 8, 252)
-			self.lcd.Frame_AreaCopy(1, 0, 438, 32, 448, 31, 325)
+			#self.lcd.Frame_AreaCopy(1, 0, 438, 32, 448, 31, 325)
+		self.lcd.Draw_String(False, False, self.lcd.font8x16, self.lcd.Color_FG, self.lcd.Color_BGTitle, 31, 325, self.pd.s_TUNE)
 
 	def ICON_StartTune(self, show):
 		if show:
@@ -2726,7 +2763,7 @@ class DWIN_LCD:
 		self.lcd.Draw_String(
 			False, False, self.lcd.font8x16, self.lcd.Color_White, self.lcd.Color_Bg_Black,
 			self.LBLX, self.MBASE(row),
-			self.pd.HOST + self.pd.SHUTDOWN
+			self.pd.s_HOST + self.pd.s_SHUTDOWN
 		)
 		self.Draw_Menu_Line(row, self.ICON_Contact)
 		#self.Draw_More_Icon(self.CONTROL_CASE_HOST_SHUTDOWN)
@@ -2767,8 +2804,8 @@ class DWIN_LCD:
 		self.Draw_Menu_Line(row, self.ICON_ReadEEPROM)
 		self.lcd.Draw_Signed_Float(
 			self.lcd.font8x16, self.lcd.Color_Bg_Black,
-     		2, 1, 210, self.MBASE(row),
-     		self.pd.fw_retract_length * 10
+	 		2, 1, 210, self.MBASE(row),
+	 		self.pd.fw_retract_length * 10
 		)
 
 	def Item_Prepare_fw_retract_speed(self, row):
@@ -2780,10 +2817,10 @@ class DWIN_LCD:
 		self.Draw_Menu_Line(row, self.ICON_Speed)
 		self.lcd.Draw_Signed_Float(
 			self.lcd.font8x16, self.lcd.Color_Bg_Black,
-     		2, 1, 210, self.MBASE(row),
-     		self.pd.fw_retract_speed * 10
+	 		2, 1, 210, self.MBASE(row),
+	 		self.pd.fw_retract_speed * 10
 		)
-     
+	 
 	def Item_Prepare_fw_unretract_speed(self, row):
 		self.lcd.Draw_String(
 			False, False, self.lcd.font8x16, self.lcd.Color_Yellow,
@@ -2793,8 +2830,8 @@ class DWIN_LCD:
 		self.Draw_Menu_Line(row, self.ICON_WriteEEPROM)
 		self.lcd.Draw_Signed_Float(
 			self.lcd.font8x16, self.lcd.Color_Bg_Black,
-     		2, 1, 210, self.MBASE(row),
-     		self.pd.fw_unretract_speed * 10
+	 		2, 1, 210, self.MBASE(row),
+	 		self.pd.fw_unretract_speed * 10
 		)
    
 	def Item_Prepare_fw_unretract_extra_length(self, row):
@@ -2806,8 +2843,8 @@ class DWIN_LCD:
 		self.Draw_Menu_Line(row, self.ICON_More)
 		self.lcd.Draw_Signed_Float(
 			self.lcd.font8x16, self.lcd.Color_Bg_Black,
-     		2, 1, 210, self.MBASE(row),
-     		self.pd.fw_unretract_extra_length * 10
+	 		2, 1, 210, self.MBASE(row),
+	 		self.pd.fw_unretract_extra_length * 10
 		)
 
 	# --------------------------------------------------------------#
@@ -2939,7 +2976,8 @@ class DWIN_LCD:
 		elif self.encoder.value > self.EncodeLast:
 			self.EncodeLast = self.encoder.value
 			return self.ENCODER_DIFF_CCW
-		elif not GPIO.input(self.button_pin):
+		#elif not GPIO.input(self.button_pin):	#mkocot
+		elif self.button.is_pressed:	#mkocot
 			if self.EncodeEnter > current_milli_time(): # prevent double clicks
 				return self.ENCODER_DIFF_NO
 			self.EncodeEnter = current_milli_time() + self.ENCODER_WAIT_ENTER
