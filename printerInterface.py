@@ -291,6 +291,9 @@ class PrinterData:
 	s_PREHEAT = "Preheat"
 	s_COOLDOWN = "Cooldown"
 	s_PRINT = "Print"
+	s_PAUSE = "Pause"
+	s_STOP = "Stop"
+	s_CONTINUE = "Cont"
 
 	display_status = ""
 

@@ -2204,11 +2204,13 @@ class DWIN_LCD:
 		self.lcd.Draw_String(False, False, self.lcd.font10x20, self.lcd.Color_FG, self.lcd.Color_BGTitle, 14, 8, self.pd.s_CONTROL)
   
 		if scroll + self.CONTROL_CASE_TEMP <= self.MROWS:
-			self.lcd.Frame_AreaCopy(1, 1, 89, 83, 101, self.LBLX, self.MBASE(self.CONTROL_CASE_TEMP))  # Temperature >
+			#self.lcd.Frame_AreaCopy(1, 1, 89, 83, 101, self.LBLX, self.MBASE(self.CONTROL_CASE_TEMP))  # Temperature >
+			self.lcd.Draw_String(False, True, self.lcd.font8x16, self.lcd.Color_FG, self.lcd.Color_BG, self.LBLX, self.MBASE(self.CONTROL_CASE_TEMP), self.pd.s_TEMPERATURE)
 			self.Draw_Menu_Line(self.CONTROL_CASE_TEMP, self.ICON_Temperature)
 			self.Draw_More_Icon(self.CONTROL_CASE_TEMP)
 		if scroll + self.CONTROL_CASE_MOVE <= self.MROWS:
-			self.lcd.Frame_AreaCopy(1, 84, 89, 128, 99, self.LBLX, self.MBASE(self.CONTROL_CASE_MOVE))  # Motion >
+			#self.lcd.Frame_AreaCopy(1, 84, 89, 128, 99, self.LBLX, self.MBASE(self.CONTROL_CASE_MOVE))  # Motion >
+			self.lcd.Draw_String(False, True, self.lcd.font8x16, self.lcd.Color_FG, self.lcd.Color_BG, self.LBLX, self.MBASE(self.CONTROL_CASE_MOVE), self.pd.s_MOTION)
 			self.Draw_Menu_Line(self.CONTROL_CASE_MOVE, self.ICON_Motion)
 			self.Draw_More_Icon(self.CONTROL_CASE_MOVE)
 		#self.lcd.Frame_AreaCopy(1, 0, 104, 25, 115, self.LBLX, self.MBASE(self.CONTROL_CASE_INFO))  # Info >
@@ -2696,33 +2698,37 @@ class DWIN_LCD:
 		else:
 			self.lcd.ICON_Show(self.ICON, self.ICON_Setup_0, 145, 246)
 			self.lcd.Frame_AreaCopy(1, 0, 438, 32, 448, 182, 318)
-	
+		#self.lcd.Draw_String(False, False, self.lcd.font8x16, self.lcd.Color_FG, self.lcd.Color_BGTitle, 182, 318, self.pd.s_)
+
 	def ICON_Continue(self):
 		if (self.select_print.now == 1):
 			self.lcd.ICON_Show(self.ICON, self.ICON_Continue_1, 96, 252)
 			self.lcd.Draw_Rectangle(0, self.lcd.Color_White, 96, 252, 175, 351)
-			self.lcd.Frame_AreaCopy(1, 1, 452, 32, 464, 121, 325)
+			#self.lcd.Frame_AreaCopy(1, 1, 452, 32, 464, 121, 325)
 		else:
 			self.lcd.ICON_Show(self.ICON, self.ICON_Continue_0, 96, 252)
-			self.lcd.Frame_AreaCopy(1, 1, 424, 31, 434, 121, 325)
+			#self.lcd.Frame_AreaCopy(1, 1, 424, 31, 434, 121, 325)
+		self.lcd.Draw_String(False, False, self.lcd.font8x16, self.lcd.Color_FG, self.lcd.Color_BGTitle, 121, 325, self.pd.s_CONTINUE)
 
 	def ICON_Pause(self):
 		if (self.select_print.now == 1):
 			self.lcd.ICON_Show(self.ICON, self.ICON_Pause_1, 96, 252)
 			self.lcd.Draw_Rectangle(0, self.lcd.Color_White, 96, 252, 175, 351)
-			self.lcd.Frame_AreaCopy(1, 177, 451, 216, 462, 116, 325)
+			#self.lcd.Frame_AreaCopy(1, 177, 451, 216, 462, 116, 325)
 		else:
 			self.lcd.ICON_Show(self.ICON, self.ICON_Pause_0, 96, 252)
-			self.lcd.Frame_AreaCopy(1, 177, 423, 215, 433, 116, 325)
+			#self.lcd.Frame_AreaCopy(1, 177, 423, 215, 433, 116, 325)
+		self.lcd.Draw_String(False, False, self.lcd.font8x16, self.lcd.Color_FG, self.lcd.Color_BGTitle, 116, 325, self.pd.s_PAUSE)
 
 	def ICON_Stop(self):
 		if (self.select_print.now == 2):
 			self.lcd.ICON_Show(self.ICON, self.ICON_Stop_1, 184, 252)
 			self.lcd.Draw_Rectangle(0, self.lcd.Color_White, 184, 252, 263, 351)
-			self.lcd.Frame_AreaCopy(1, 218, 452, 249, 466, 209, 325)
+			#self.lcd.Frame_AreaCopy(1, 218, 452, 249, 466, 209, 325)
 		else:
 			self.lcd.ICON_Show(self.ICON, self.ICON_Stop_0, 184, 252)
-			self.lcd.Frame_AreaCopy(1, 218, 423, 247, 436, 209, 325)
+			#self.lcd.Frame_AreaCopy(1, 218, 423, 247, 436, 209, 325)
+		self.lcd.Draw_String(False, False, self.lcd.font8x16, self.lcd.Color_FG, self.lcd.Color_BGTitle, 209, 325, self.pd.s_STOP)
 
 	def Item_Prepare_Move(self, row):
 		self.draw_move_en(self.MBASE(row))  # "Move >"
