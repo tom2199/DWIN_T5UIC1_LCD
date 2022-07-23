@@ -455,7 +455,9 @@ class PrinterData:
 		if not self.files or refresh:
 			self.files = self.getREST('/server/files/list')["result"]
 		names = []
-		for fl in self.files:
+		sortedByTime = sorted(self.files, key=lambda x: x["modified"], reverse=True)
+		#for fl in self.files:
+		for fl in sortedByTime:
 			names.append(fl["path"])
 		return names
 
