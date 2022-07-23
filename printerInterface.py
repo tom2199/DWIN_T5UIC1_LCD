@@ -64,7 +64,7 @@ class HMI_value_t:
 	Move_E_scale = 0.0
 	offset_value = 0.0
 	show_mode = 0  # -1: Temperature control    0: Printing temperature
-	fw_retract_length = 25.0
+	fw_retract_length = 25.0 #TODO fix to int *10
 	fw_retract_speed = 0.5
 	fw_unretract_speed = 0.5
 	fw_unretract_extra_length = 0.0
@@ -261,9 +261,11 @@ class PrinterData:
 		material_preset_t('PLA', 180, 0),
 		material_preset_t('ABS', 0, 70)
 	]
+
 	files = None
+	filesByTime = None
 	MACHINE_SIZE = "235x235x240"
-	SHORT_BUILD_VERSION = "1.00"
+	SHORT_BUILD_VERSION = "1.11"
 	CORP_WEBSITE_E = "https://www.klipper3d.org/"
  
 	######### str
@@ -454,10 +456,9 @@ class PrinterData:
 	def GetFiles(self, refresh=False):
 		if not self.files or refresh:
 			self.files = self.getREST('/server/files/list')["result"]
+			self.filesByTime = sorted(self.files, key=lambda x: x["modified"], reverse=True)
 		names = []
-		sortedByTime = sorted(self.files, key=lambda x: x["modified"], reverse=True)
-		#for fl in self.files:
-		for fl in sortedByTime:
+		for fl in self.filesByTime:
 			names.append(fl["path"])
 		return names
 
@@ -565,7 +566,8 @@ class PrinterData:
 		return 0
 
 	def openAndPrintFile(self, filenum):
-		self.file_name = self.files[filenum]['path']
+		#self.file_name = self.files[filenum]['path']
+		self.file_name = self.filesByTime[filenum]['path']
 		self.postREST('/printer/print/start', json={'filename': self.file_name})
 
 	def cancel_job(self): #fixed

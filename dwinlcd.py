@@ -1054,7 +1054,7 @@ class DWIN_LCD:
 			self.pd.HMI_ValueStruct.Fan_speed
 		)
 
-	def HMI_fw_retract_length(self):	#sur
+	def HMI_fw_retract_length(self):	#sur #TODO FIX
 		encoder_diffState = self.get_encoder_state()
 		if (encoder_diffState == self.ENCODER_DIFF_NO):
 			return
@@ -1073,7 +1073,7 @@ class DWIN_LCD:
 			#self.encoderRate = True
 			self.EncoderRateLimit = True
 
-			if self.pd.HMI_ValueStruct.fw_retract_length < 0:
+			if (self.pd.HMI_ValueStruct.fw_retract_length < 0):
 				self.pd.HMI_ValueStruct.fw_retract_length = 0.0
 			#if self.pd.HMI_ValueStruct.fw_retract_length > 100:
 			#	self.pd.HMI_ValueStruct.fw_retract_length = 100
@@ -1109,7 +1109,7 @@ class DWIN_LCD:
 			#self.encoderRate = True
 			self.EncoderRateLimit = True
 
-			if self.pd.HMI_ValueStruct.fw_retract_speed < 0:
+			if (self.pd.HMI_ValueStruct.fw_retract_speed < 0):
 				self.pd.HMI_ValueStruct.fw_retract_speed = 0.0
 			#if self.pd.HMI_ValueStruct.fw_retract_length > 100:
 			#	self.pd.HMI_ValueStruct.fw_retract_length = 100
@@ -1142,7 +1142,7 @@ class DWIN_LCD:
 			#self.encoderRate = True
 			self.EncoderRateLimit = True
 
-			if self.pd.HMI_ValueStruct.fw_unretract_speed < 0:
+			if (self.pd.HMI_ValueStruct.fw_unretract_speed < 0):
 				self.pd.HMI_ValueStruct.fw_unretract_speed = 0.0
 			#if self.pd.HMI_ValueStruct.fw_retract_length > 100:
 			#	self.pd.HMI_ValueStruct.fw_retract_length = 100
@@ -1175,7 +1175,7 @@ class DWIN_LCD:
 			#self.encoderRate = True
 			self.EncoderRateLimit = True
 
-			if self.pd.HMI_ValueStruct.fw_unretract_extra_length < 0:
+			if (self.pd.HMI_ValueStruct.fw_unretract_extra_length < 0):
 				self.pd.HMI_ValueStruct.fw_unretract_extra_length = 0.0
 			#if self.pd.HMI_ValueStruct.fw_retract_length > 100:
 			#	self.pd.HMI_ValueStruct.fw_retract_length = 100
