@@ -3,7 +3,7 @@ import multitimer
 import atexit
 
 from encoder import Encoder
-from RPi import GPIO
+from OPi import GPIO
 
 from printerInterface import PrinterData
 from DWIN_Screen import T5UIC1_LCD
