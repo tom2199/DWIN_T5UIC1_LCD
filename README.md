@@ -59,6 +59,7 @@ Run with `python3 ./run.py`
 ### 1.4 Run at boot:
 
 Note: Delay of 30s after boot to allow webservices to settal. Path of `run.py` is expected to be `/home/pi/DWIN_T5UIC1_LCD/run.py`
+Modify service to point where is the run.py path. By default was set to USER env var.
 
    ```
    sudo chmod +x run.py
