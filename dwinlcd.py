@@ -3,8 +3,8 @@ import multitimer
 import atexit
 
 from encoder import Encoder
+import orangepi.zero2
 from OPi import GPIO
-
 from printerInterface import PrinterData
 from DWIN_Screen import T5UIC1_LCD
 
@@ -303,7 +303,7 @@ class DWIN_LCD:
 	# Passing parameters: serial port number
 	# DWIN screen uses serial port 1 to send
 	def __init__(self, USARTx, encoder_pins, button_pin, octoPrint_API_Key):
-		GPIO.setmode(GPIO.BOARD)
+		GPIO.setmode(orangepi.zero2.BOARD)
 		self.encoder = Encoder(encoder_pins[0], encoder_pins[1])
 		self.button_pin = button_pin
 		GPIO.setup(self.button_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
