@@ -2694,13 +2694,13 @@ class DWIN_LCD:
 
 	def ICON_StartTune(self, show):
 		if show:
-			self.lcd.ICON_Show(self.ICON, self.ICON_Setup_1, 145, 246)
-			self.lcd.Draw_Rectangle(0, self.lcd.Color_White, 145, 246, 224, 345)	#254, 345)
-			self.lcd.Frame_AreaCopy(1, 0, 466, 34, 476, 182, 318)
+			self.lcd.ICON_Show(self.ICON, self.ICON_Control_1, 145, 246)
+			self.lcd.Draw_Rectangle(0, self.lcd.Color_White, 145, 246, 254, 345)	#254, 345)
+			#self.lcd.Frame_AreaCopy(1, 0, 466, 34, 476, 182, 318)
 		else:
-			self.lcd.ICON_Show(self.ICON, self.ICON_Setup_0, 145, 246)
-			self.lcd.Frame_AreaCopy(1, 0, 438, 32, 448, 182, 318)
-		#self.lcd.Draw_String(False, False, self.lcd.font8x16, self.lcd.Color_FG, self.lcd.Color_BGTitle, 182, 318, self.pd.s_)
+			self.lcd.ICON_Show(self.ICON, self.ICON_Control_0, 145, 246)
+			#self.lcd.Frame_AreaCopy(1, 0, 438, 32, 448, 182, 318)
+		self.lcd.Draw_String(False, False, self.lcd.font8x16, self.lcd.Color_FG, self.lcd.Color_BGTitle, 182, 318, self.pd.s_TUNE)
 
 	def ICON_Continue(self):
 		if (self.select_print.now == 1):
