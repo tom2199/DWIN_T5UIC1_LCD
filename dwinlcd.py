@@ -6,10 +6,7 @@ import atexit
 from encoder import Encoder
 import orangepi.zero2
 from OPi import GPIO
-<<<<<<< Updated upstream
 #from RPi import GPIO	#mkocot
-=======
->>>>>>> Stashed changes
 #from gpiozero import Button	#mkocot
 
 from printerInterface import PrinterData
@@ -324,10 +321,6 @@ class DWIN_LCD:
 	# DWIN screen uses serial port 1 to send
 	def __init__(self, USARTx, encoder_pins, button_pin, octoPrint_API_Key):
 		GPIO.setmode(orangepi.zero2.BOARD)
-<<<<<<< Updated upstream
-		GPIO.setmode(GPIO.BCM)	#mkocot
-=======
->>>>>>> Stashed changes
 		self.encoder = Encoder(encoder_pins[0], encoder_pins[1])
 		self.button_pin = button_pin
 		GPIO.setup(self.button_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)	#mkocot
