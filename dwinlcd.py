@@ -4,14 +4,14 @@ import threading #mkocot
 import atexit
 
 from encoder import Encoder
-<<<<<<< HEAD
 import orangepi.zero2
 from OPi import GPIO
-=======
+<<<<<<< Updated upstream
 #from RPi import GPIO	#mkocot
-from gpiozero import Button	#mkocot
+=======
+>>>>>>> Stashed changes
+#from gpiozero import Button	#mkocot
 
->>>>>>> b5055af842392453051d0e676bf273954ab09e28
 from printerInterface import PrinterData
 from DWIN_Screen import T5UIC1_LCD
 
@@ -319,21 +319,21 @@ class DWIN_LCD:
 	PREHEAT_CASE_SAVE = (PREHEAT_CASE_FAN + 1)
 	PREHEAT_CASE_TOTAL = PREHEAT_CASE_SAVE
 
-	# Dwen serial screen initialization
+	# DWIN serial screen initialization
 	# Passing parameters: serial port number
 	# DWIN screen uses serial port 1 to send
 	def __init__(self, USARTx, encoder_pins, button_pin, octoPrint_API_Key):
-<<<<<<< HEAD
 		GPIO.setmode(orangepi.zero2.BOARD)
+<<<<<<< Updated upstream
+		GPIO.setmode(GPIO.BCM)	#mkocot
 =======
-		#GPIO.setmode(GPIO.BCM)	#mkocot
->>>>>>> b5055af842392453051d0e676bf273954ab09e28
+>>>>>>> Stashed changes
 		self.encoder = Encoder(encoder_pins[0], encoder_pins[1])
 		self.button_pin = button_pin
-		#GPIO.setup(self.button_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)	#mkocot
-		#GPIO.add_event_detect(self.button_pin, GPIO.BOTH, callback=self.encoder_has_data)	#mkocot
-		self.button = Button(button_pin)	#mkocot
-		self.button.when_pressed = self.encoder_has_data	#mkocot
+		GPIO.setup(self.button_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)	#mkocot
+		GPIO.add_event_detect(self.button_pin, GPIO.BOTH, callback=self.encoder_has_data)	#mkocot
+		#self.button = Button(button_pin)	#mkocot
+		#self.button.when_pressed = self.encoder_has_data	#mkocot
 		self.encoder.callback = self.encoder_has_data
 		self.EncodeLast = 0
 		self.EncodeMS = current_milli_time() + self.ENCODER_WAIT
@@ -364,8 +364,8 @@ class DWIN_LCD:
 		self.lcd.Frame_SetDir(1)
 		self.lcd.UpdateLCD()
 		self.timer.stop()
-		#GPIO.remove_event_detect(self.button_pin)	#mkocot
-		self.button.close()	#mkocot
+		GPIO.remove_event_detect(self.button_pin)	#mkocot
+		#self.button.close()	#mkocot
 
 	def MBASE(self, L):
 		return 49 + self.MLINE * L
@@ -2991,8 +2991,8 @@ class DWIN_LCD:
 		elif self.encoder.value > self.EncodeLast:
 			self.EncodeLast = self.encoder.value
 			return self.ENCODER_DIFF_CCW
-		#elif not GPIO.input(self.button_pin):	#mkocot
-		elif self.button.is_pressed:	#mkocot
+		elif not GPIO.input(self.button_pin):	#mkocot
+		#elif self.button.is_pressed:	#mkocot
 			if self.EncodeEnter > current_milli_time(): # prevent double clicks
 				return self.ENCODER_DIFF_NO
 			self.EncodeEnter = current_milli_time() + self.ENCODER_WAIT_ENTER
