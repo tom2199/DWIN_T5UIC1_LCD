@@ -53,6 +53,7 @@ class HMI_value_t:
 	Bed_Temp = 0
 	Fan_speed = 0
 	print_speed = 100
+	flow_speed = 100
 	Max_Feedspeed = 0.0
 	Max_Acceleration = 0.0
 	Max_Jerk = 0.0
@@ -63,7 +64,10 @@ class HMI_value_t:
 	Move_E_scale = 0.0
 	offset_value = 0.0
 	show_mode = 0  # -1: Temperature control    0: Printing temperature
-
+	fw_retract_length = 25.0 #TODO fix to int *10
+	fw_retract_speed = 0.5
+	fw_unretract_speed = 0.5
+	fw_unretract_extra_length = 0.0
 
 class HMI_Flag_t:
 	language = 0
@@ -132,7 +136,7 @@ class KlippySocket:
 					))
 				exit(-1)
 			break
-		print("Connection.\n")
+		print("Connected.\n")
 
 	def process_socket(self):
 		data = self.webhook_socket.recv(4096).decode()
@@ -158,7 +162,7 @@ class KlippySocket:
 			return
 		try:
 			m = json.loads(line)
-		except JSONDecodeError:
+		except json.JSONDecodeError:
 			print("ERROR: Unable to parse line\n")
 			return
 		cm = json.dumps(m, separators=(',', ':'))
@@ -191,25 +195,25 @@ class PrinterData:
 	HAS_HOTEND = True
 	HOTENDS = 1
 	HAS_HEATED_BED = True
-	HAS_FAN = False
+	HAS_FAN = True
 	HAS_ZOFFSET_ITEM = True
-	HAS_ONESTEP_LEVELING = False
+	HAS_ONESTEP_LEVELING = False # Do not touch False sur
 	HAS_PREHEAT = True
-	HAS_BED_PROBE = False
+	HAS_BED_PROBE = True
 	PREVENT_COLD_EXTRUSION = True
-	EXTRUDE_MINTEMP = 170
-	EXTRUDE_MAXLENGTH = 200
+	EXTRUDE_MINTEMP = 180
+	EXTRUDE_MAXLENGTH = 100
 
 	HEATER_0_MAXTEMP = 275
-	HEATER_0_MINTEMP = 5
+	HEATER_0_MINTEMP = 0
 	HOTEND_OVERSHOOT = 15
 
 	MAX_E_TEMP = (HEATER_0_MAXTEMP - (HOTEND_OVERSHOOT))
 	MIN_E_TEMP = HEATER_0_MINTEMP
 
 	BED_OVERSHOOT = 10
-	BED_MAXTEMP = 150
-	BED_MINTEMP = 5
+	BED_MAXTEMP = 120
+	BED_MINTEMP = 0
 
 	BED_MAX_TARGET = (BED_MAXTEMP - (BED_OVERSHOOT))
 	MIN_BED_TEMP = BED_MINTEMP
@@ -224,10 +228,23 @@ class PrinterData:
 
 	buzzer = buzz_t()
 
+	xpos = 0
+	ypos = 0
+	zpos = 0
+
 	BABY_Z_VAR = 0
 	feedrate_percentage = 100
+	flowrate_percentage = 100
+	fanspeed_percentage = 0
 	temphot = 0
 	tempbed = 0
+
+	fw_retract_length = 25.0
+	fw_retract_speed = 0.5
+	fw_unretract_speed = 25.0
+	fw_unretract_extra_length = 0.0
+
+	gcode_speed = 0.0
 
 	HMI_ValueStruct = HMI_value_t()
 	HMI_flag = HMI_Flag_t()
@@ -241,13 +258,46 @@ class PrinterData:
 	}
 
 	material_preset = [
-		material_preset_t('PLA', 200, 60),
-		material_preset_t('ABS', 210, 100)
+		material_preset_t('PLA', 180, 0),
+		material_preset_t('ABS', 0, 70)
 	]
+
 	files = None
-	MACHINE_SIZE = "220x220x250"
-	SHORT_BUILD_VERSION = "1.00"
+	filesByTime = None
+	MACHINE_SIZE = "235x235x240"
+	SHORT_BUILD_VERSION = "1.11"
 	CORP_WEBSITE_E = "https://www.klipper3d.org/"
+ 
+	######### str
+	s_RESTART = "Restart"
+	s_KLIPPER = "Klipper "
+	s_FW = "FW "
+	s_HOST = "Host "
+	s_SHUTDOWN = "Shutdown"
+	s_SETTINGS = "Settings"
+	s_HOME = "Home" 
+	s_HOT = "Hot "		
+	s_BED = "Bed "
+	s_PRINT_FILE = "Print file"
+	s_PREPARE = "Prepare"
+	s_CONTROL = "Control"
+	s_INFO = "Info"
+	s_TUNE = "Tune"
+	s_TEMPERATURE = "Temperature"
+	s_MOTION = "Motion"
+	s_MOVE = "Move"
+	s_BACK = "Back"
+	s_TIME = "Time"
+	s_PRINTING = "Printing "
+	s_REMAIN = "Remain"
+	s_PREHEAT = "Preheat"
+	s_COOLDOWN = "Cooldown"
+	s_PRINT = "Print"
+	s_PAUSE = "Pause"
+	s_STOP = "Stop"
+	s_CONTINUE = "Cont"
+
+	display_status = ""
 
 	def __init__(self, API_Key, URL='127.0.0.1'):
 		self.op = MoonrakerSocket(URL, 80, API_Key)
@@ -310,7 +360,7 @@ class PrinterData:
 							if status['configfile']['config']['bltouch']['z_offset']:
 								self.BABY_Z_VAR = float(status['configfile']['config']['bltouch']['z_offset'])
 
-			# print(status)
+			#print(status)
 
 	def ishomed(self):
 		if self.current_position.home_x and self.current_position.home_y and self.current_position.home_z:
@@ -341,7 +391,7 @@ class PrinterData:
 		d = r.content.decode('utf-8')
 		try:
 			return json.loads(d)
-		except JSONDecodeError:
+		except json.JSONDecodeError:
 			print('Decoding JSON has failed')
 		return None
 
@@ -378,28 +428,57 @@ class PrinterData:
 		self.X_MAX_POS = int(volume[0])
 		self.Y_MAX_POS = int(volume[1])
 
+		#list_objects = self.getREST('/printer/objects/list')
+		#print(list_objects)
+		#{'result': {'objects': 
+		# ['webhooks', 'configfile', 'mcu', 'mcu rpi', 
+		# 'gcode_macro set_Z_0', 'gcode_macro PID_calibrate_240', ......
+		# 'firmware_retraction', 'heaters', 'heater_bed', 'fan', 'gcode_move', 'probe', 'bed_mesh', 'tmc2208 extruder', 
+		# 'filament_switch_sensor Filament_sensor', 'print_stats', 'virtual_sdcard', 'display_status', 'pause_resume', 
+		# 'output_pin BEEPER_pin', 'temperature_host rpi_temp', 'temperature_sensor rpi_temp', 'temperature_sensor mcu_temp', 
+		# 'motion_report', 'query_endstops', 'idle_timeout', 'system_stats', 'toolhead', 'extruder']}}
+
+		#fwr = self.getREST('/printer/objects/query?firmware_retraction')
+		#print(fwr)
+		#{'result': {'status': {'firmware_retraction': {'retract_length': 0.3, 'unretract_extra_length': 0.0, 'unretract_speed': 20.0, 'retract_speed': 20.0}}, 'eventtime': 2476.093258638}}
+
+		# fwr = self.getREST('/printer/objects/query?firmware_retraction')['result']['status']['firmware_retraction']
+		# #firmware_retraction = fwr['firmware_retraction']
+		# #print(fwr['retract_speed'])
+
+		# self.fw_retract_length = fwr['retract_length']
+		# #print ('fwrl: ',self.fw_retract_length)
+		# self.fw_retract_speed = fwr['retract_speed']
+		# self.fw_unretract_speed = fwr['unretract_speed']
+		# self.fw_unretract_extra_length = fwr['unretract_extra_length']
+
+
 	def GetFiles(self, refresh=False):
 		if not self.files or refresh:
 			self.files = self.getREST('/server/files/list')["result"]
+			self.filesByTime = sorted(self.files, key=lambda x: x["modified"], reverse=True)
 		names = []
-		for fl in self.files:
+		for fl in self.filesByTime:
 			names.append(fl["path"])
 		return names
 
 	def update_variable(self):
-		query = '/printer/objects/query?extruder&heater_bed&gcode_move&fan'
+		query = '/printer/objects/query?extruder&heater_bed&gcode_move&fan&display_status'
 		data = self.getREST(query)['result']['status']
 		gcm = data['gcode_move']
 		z_offset = gcm['homing_origin'][2] #z offset
 		flow_rate = gcm['extrude_factor'] * 100 #flow rate percent
 		self.absolute_moves = gcm['absolute_coordinates'] #absolute or relative
 		self.absolute_extrude = gcm['absolute_extrude'] #absolute or relative
-		speed = gcm['speed'] #current speed in mm/s
+		speed = gcm['speed'] #current speed in mm/m
 		print_speed = gcm['speed_factor'] * 100 #print speed percent
 		bed = data['heater_bed'] #temperature, target
 		extruder = data['extruder'] #temperature, target
 		fan = data['fan']
+		d_status = data['display_status']['message']
+
 		Update = False
+
 		try:
 			if self.thermalManager['temp_bed']['celsius'] != int(bed['temperature']):
 				self.thermalManager['temp_bed']['celsius'] = int(bed['temperature'])
@@ -420,13 +499,48 @@ class PrinterData:
 				self.BABY_Z_VAR = z_offset
 				self.HMI_ValueStruct.offset_value = z_offset * 100
 				Update = True
+			if self.xpos != self.current_position.x:
+				Update = True
+			if self.ypos != self.current_position.y:
+				Update = True
+			if self.zpos != self.current_position.z:
+				Update = True
+			if self.flowrate_percentage != flow_rate:
+				Update = True
+			if self.feedrate_percentage != print_speed:
+				Update = True
+			if self.display_status != str(d_status):
+				Update = True
+			if self.gcode_speed != speed:
+				Update = True
+
 		except:
-			pass #missing key, shouldn't happen, fixes misses on conditionals ¯\_(ツ)_/¯
+			pass #missing key, shouldn't happen, fixes misses on conditionals ВЇ\_(гѓ„)_/ВЇ
+
 		self.job_Info = self.getREST('/printer/objects/query?virtual_sdcard&print_stats')['result']['status']
 		if self.job_Info:
 			self.file_name = self.job_Info['print_stats']['filename']
 			self.status = self.job_Info['print_stats']['state']
 			self.HMI_flag.print_finish = self.getPercent() == 100.0
+		
+		self.fwr = self.getREST('/printer/objects/query?firmware_retraction')['result']['status']['firmware_retraction']
+		if self.fwr:
+			self.fw_retract_length = self.fwr['retract_length']
+			self.fw_retract_speed = self.fwr['retract_speed']
+			self.fw_unretract_speed = self.fwr['unretract_speed']
+			self.fw_unretract_extra_length = self.fwr['unretract_extra_length']
+
+		self.xpos = self.current_position.x
+		self.ypos = self.current_position.y
+		self.zpos = self.current_position.z
+
+		self.flowrate_percentage = flow_rate
+		self.feedrate_percentage = print_speed
+
+		self.display_status = str(d_status or '')
+
+		self.gcode_speed = speed
+
 		return Update
 
 	def printingIsPaused(self):
@@ -452,7 +566,8 @@ class PrinterData:
 		return 0
 
 	def openAndPrintFile(self, filenum):
-		self.file_name = self.files[filenum]['path']
+		#self.file_name = self.files[filenum]['path']
+		self.file_name = self.filesByTime[filenum]['path']
 		self.postREST('/printer/print/start', json={'filename': self.file_name})
 
 	def cancel_job(self): #fixed
@@ -465,11 +580,65 @@ class PrinterData:
 
 	def resume_job(self): #fixed
 		print('Resuming job:')
-		self.postREST('printer/print/resume', json=None)
+		self.postREST('/printer/print/resume', json=None)
+
+	def klipper_restart(self): #sur POST /printer/restart
+		print('klipper restart:')
+		self.postREST('/printer/restart', json=None)
+
+	def mcu_fw_restart(self): #sur POST /printer/firmware_restart
+		print('fw restart:')
+		self.postREST('/printer/firmware_restart', json=None)
+
+	def host_shutdown(self): #sur POST /machine/shutdown
+		print('host shutdown:')
+		self.postREST('/machine/shutdown', json=None)
+
+	def host_restart(self): #sur POST /machine/reboot
+		print('host restart')
+		self.postREST('/machine/reboot', json=None)
 
 	def set_feedrate(self, fr):
 		self.feedrate_percentage = fr
 		self.sendGCode('M220 S%s' % fr)
+
+	def set_fanspeed(self, fr):
+		self.fanspeed_percentage = fr
+		f = 255 * fr / 100
+		if f < 0 : f = 0
+		if f > 255 : f = 255
+		self.sendGCode('M106 S%s' % f)
+
+	def set_flowrate(self, fr):
+		self.flowrate_percentage = fr
+		self.sendGCode('M221 S%s' % fr)
+
+	# def set_fw_retract(self, rl, rs, us, uel):
+	# 	#SET_RETRACTION [RETRACT_LENGTH=<mm>] [RETRACT_SPEED=<mm/s>] [UNRETRACT_EXTRA_LENGTH=<mm>] [UNRETRACT_SPEED=<mm/s>]
+	# 	self.fw_retract_length = rl
+	# 	self.fw_retract_speed = rs
+	# 	self.fw_unretract_speed = us
+	# 	self.fw_unretract_extra_length = uel
+	# 	self.sendGCode('SET_RETRACTION RETRACT_LENGTH=%s RETRACT_SPEED=%s UNRETRACT_SPEED=%s UNRETRACT_EXTRA_LENGTH=%s'
+	# 		% rl, rs, us, uel)
+
+	def set_fw_retract_length(self, fr):
+		self.fw_retract_length = fr
+		#print('set FW retract length to: ', fr)
+		self.sendGCode('SET_RETRACTION RETRACT_LENGTH=%s' % fr)
+
+
+	def set_fw_retract_speed(self, fr):
+		self.fw_retract_speed = fr
+		self.sendGCode('SET_RETRACTION RETRACT_SPEED=%s' % fr)
+
+	def set_fw_unretract_speed(self, fr):
+		self.fw_unretract_speed = fr
+		self.sendGCode('SET_RETRACTION UNRETRACT_SPEED=%s' % fr)
+
+	def set_fw_unretract_extra_length(self, fr):
+		self.fw_unretract_extra_length = fr
+		self.sendGCode('SET_RETRACTION UNRETRACT_EXTRA_LENGTH=%s' % fr)
 
 	def home(self, homeZ=False): #fixed using gcode
 		script = 'G28 X Y'
