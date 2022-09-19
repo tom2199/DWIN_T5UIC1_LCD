@@ -1,6 +1,3 @@
-
-<img src ="images/photo_2022-03-31_22-41-40.jpg"><img src ="images/photo_2022-03-31_22-42-09.jpg">
-
 # DWIN_T5UIC1_LCD
 
 Python class for the Ender 3 V2 LCD runing klipper3d with Moonraker for Orange Pi Zero 2 Board using OPi.GPIO
@@ -12,9 +9,12 @@ Python class for the Ender 3 V2 LCD runing klipper3d with Moonraker for Orange P
 ## 1. Setup:
 
 ### [Enabling Klipper's API socket](https://www.klipper3d.org/API_Server.html)
-  Check your /etc/systemd/system/klipper.service file for API enable parameter `-a /tmp/klippy_uds`:
+  By default, the Klipper's API socket is not enabled. In order to use the API server, the file /etc/default/klipper need to be updated form
 
-  `ExecStart=/home/pi/klippy-env/bin/python /home/pi/klipper/klippy/klippy.py /home/pi/klipper_config/printer.cfg -l /home/pi/klipper_logs/klippy.log -a /tmp/klippy_uds`
+    KLIPPY_ARGS="/home/pi/klipper/klippy/klippy.py /home/pi/printer.cfg -l /tmp/klippy.log"
+To:
+
+    KLIPPY_ARGS="/home/pi/klipper/klippy/klippy.py /home/pi/printer.cfg -a /tmp/klippy_uds -l /tmp/klippy.log"
 
 ### 1.1 Library requirements 
 
@@ -33,22 +33,7 @@ To work with original repo, the RPi.GPIO library was replaced by [OPi.GPIO](http
 
 - You should clone OPi.GPIO repo from github and manually install it, or [install via pip](https://opi-gpio.readthedocs.io/en/latest/install.html) as stated in Lib requirements, and then add [zero2.py](https://github.com/rm-hull/OPi.GPIO/blob/master/orangepi/zero2.py) module into `install-dir/OPi.GPIO/orangepi`
 
-<<<<<<< HEAD
 - Check carefully where the package is installed as then interpreter need to know the directory in its path.
-=======
-### Wire the display 
-  * Display <-> Raspberry Pi GPIO BCM
-  * 1  - Nc
-  * 2  - Nc
-  * 3  - Rx   = 8  - GPIO14  (Tx)
-  * 4  - Tx   = 10 - GPIO15  (Rx)
-  * 5  - Ent  = 33 - GPIO13
-  * 6  - BEEP = 31 - GPIO6 (Optional)
-  * 7  - A    = 35 - GPIO19
-  * 8  - B    = 37 - GPIO26
-  * 9  - Vcc  = 4  - (5v)
-  * 10 - Gnd  = 6  - (GND)
->>>>>>> b5055af842392453051d0e676bf273954ab09e28
 
 - Also check permissions to call sysfs pin mappings as [non root access](https://opi-gpio.readthedocs.io/en/latest/install.html#non-root-access)
 
@@ -87,7 +72,6 @@ Modify service to point where is the run.py path. By default was set to USER env
    ```
 ## 2. Status
 
-<<<<<<< HEAD
 ### 2.1 Working
 
  Print Menu:
@@ -112,8 +96,5 @@ Modify service to point where is the run.py path. By default was set to USER env
     * Shows printer info.
 
 ### 2.2 Not working
-=======
-## Notworking:
->>>>>>> b5055af842392453051d0e676bf273954ab09e28
     * Save / Loding Preheat setting, hardcode on start can be changed in menu but will not retane on restart.
     * The Control: Motion Menu
