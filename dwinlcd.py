@@ -319,7 +319,7 @@ class DWIN_LCD:
 	# DWIN serial screen initialization
 	# Passing parameters: serial port number
 	# DWIN screen uses serial port 1 to send
-	def __init__(self, USARTx, encoder_pins, button_pin, octoPrint_API_Key):
+	def __init__(self, USARTx, encoder_pins, button_pin, octoPrint_API_Key, KlippySocketPath='/tmp/klippy_uds'):
 		GPIO.setmode(orangepi.zero2.BOARD)
 		self.encoder = Encoder(encoder_pins[0], encoder_pins[1])
 		self.button_pin = button_pin
@@ -336,7 +336,7 @@ class DWIN_LCD:
 		self.lcd = T5UIC1_LCD(USARTx)
 		self.lcd.Backlight_SetLuminance(0x14) #Sur 20
 		self.checkkey = self.MainMenu
-		self.pd = PrinterData(octoPrint_API_Key)
+		self.pd = PrinterData(octoPrint_API_Key, KlippySocketPath)
 		self.timer = RepeatableTimer(		#mkocot
 			interval=1, function=self.EachMomentUpdate) #sur interval 1(2)
 		self.HMI_ShowBoot()
