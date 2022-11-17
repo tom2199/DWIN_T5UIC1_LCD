@@ -319,7 +319,7 @@ class DWIN_LCD:
 	# DWIN serial screen initialization
 	# Passing parameters: serial port number
 	# DWIN screen uses serial port 1 to send
-	def __init__(self, USARTx, encoder_pins, button_pin, octoPrint_API_Key, KlippySocketPath='/tmp/klippy_uds'):
+	def __init__(self, USARTx, encoder_pins, button_pin, octoPrint_API_Key, KlippySocketPath):
 		GPIO.setmode(orangepi.zero2.BOARD)
 		self.encoder = Encoder(encoder_pins[0], encoder_pins[1])
 		self.button_pin = button_pin
