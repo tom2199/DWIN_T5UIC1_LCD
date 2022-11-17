@@ -299,7 +299,7 @@ class PrinterData:
 
 	display_status = ""
 
-	def __init__(self, API_Key, URL='127.0.0.1', KlippySocketPath='/tmp/klippy_uds'):
+	def __init__(self, API_Key, URL='127.0.0.1', KlippySocketPath):
 		self.op = MoonrakerSocket(URL, 80, API_Key)
 		self.status = None
 		print(self.op.base_address)
