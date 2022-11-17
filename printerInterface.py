@@ -299,11 +299,11 @@ class PrinterData:
 
 	display_status = ""
 
-	def __init__(self, API_Key, URL='127.0.0.1'):
+	def __init__(self, API_Key, URL='127.0.0.1', KlippySocketPath='/tmp/klippy_uds'):
 		self.op = MoonrakerSocket(URL, 80, API_Key)
 		self.status = None
 		print(self.op.base_address)
-		self.ks = KlippySocket('/tmp/klippy_uds', callback=self.klippy_callback)
+		self.ks = KlippySocket(KlippySocketPath, callback=self.klippy_callback)
 		subscribe = {
 			"id": 4001,
 			"method": "objects/subscribe",
